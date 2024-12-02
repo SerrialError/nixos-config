@@ -15,8 +15,7 @@
   sops.defaultSopsFile = ./secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";
   sops.age.keyFile = "/home/connor/.config/sops/age/keys.txt";
-  sops.secrets.sshAuthorizedKeys = {};
-  sops.secrets."ssh_authorized_keys" = {};
+  sops.secrets.ssh-auth-keys = { owner = "git"; };
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sdb";
@@ -69,7 +68,7 @@
     browsing = true;
     defaultShared = true;
     openFirewall = true;
-  };
+  };   
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -100,8 +99,10 @@
     group = "git";
     home = "/var/lib/git-server";
     createHome = true;
-    shell = "${pkgs.git}/bin/git-shell";   
-    openssh.authorizedKeys.keys = config.sops.secrets.ssh_authorized_keys;
+    shell = "${pkgs.git}/bin/git-shell";
+    openssh.authorizedKeys.keys = [
+      (builtins.readFile (toString config.sops.secrets.ssh-auth-keys.path))
+    ];
   };
 
   users.users.connor = {
@@ -202,7 +203,6 @@
     unzip
     docker-compose
     geoclue2
-    redshift
     lxappearance
     openrocket
     libsForQt5.qt5.qtquickcontrols2   
@@ -268,7 +268,7 @@
   services.openssh = {
     enable = true;
     extraConfig = ''
-      Match user git
+        Match user git
         AllowTcpForwarding no
         AllowAgentForwarding no
         PasswordAuthentication no
