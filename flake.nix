@@ -14,6 +14,7 @@
     sops-nix = {
       url = "github:Mic92/sops-nix";
     };
+    flux.url = "github:IogaMaster/flux";
   };
 
   outputs = { self, nixpkgs, home-manager, ... } @ inputs: {

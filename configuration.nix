@@ -28,6 +28,7 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+  virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
     enable = true;
     setSocketVariable = true;
@@ -277,7 +278,7 @@
     '';
   };
   services.minecraft-servers = {
-    enable = true;
+    enable = false;
     eula = true;
     dataDir = "/var/lib/mcservers";
 
