@@ -231,6 +231,8 @@
     paraview
     mpi
     curlFull
+    networkmanagerapplet
+    blueman
     nlohmann_json
     glibc
     flameshot

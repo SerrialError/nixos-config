@@ -66,18 +66,53 @@ in {
         "${modifier}+Shift+p" = "exec ${pkgs.dmenu}/bin/dmenu_run";
         "${modifier}+Shift+d" = "exec discord";
         "${modifier}+Shift+f" = "exec floorp";
+        "${modifier}+Shift+n" = "exec $HOME/.local/bin/set-random-wallpaper.sh";
       };
+
+      # Startup applications
+      startup = [
+        { command = "nm-applet"; }
+        { command = "sleep 2 && blueman-applet"; }
+        { command = "flameshot"; }
+      ];
     };
   };
 
-  xdg.configFile."lf/icons".source = ./icons;
-  gtk.enable = true;
-  gtk.iconTheme.package = pkgs.solarc-gtk-theme;
-  gtk.iconTheme.name = "SolArc-Dark";
-  gtk.cursorTheme.package = pkgs.bibata-cursors;
-  gtk.cursorTheme.name = "Bibata-Modern-Ice";
-  gtk.theme.package = pkgs.adw-gtk3;
-  gtk.theme.name = "adw-gtk3";
+  xdg = {
+    enable = true;
+    userDirs = {
+      enable = true;
+      createDirectories = true;
+      documents = "$HOME/Documents";
+      download = "$HOME/Downloads";
+      music = "$HOME/Music";
+      pictures = "$HOME/Pictures";
+      videos = "$HOME/Videos";
+    };
+  };
+
+  gtk = {
+    enable = true;
+    iconTheme = {
+      package = pkgs.solarc-gtk-theme;
+      name = "SolArc-Dark";
+    };
+    cursorTheme = {
+      package = pkgs.bibata-cursors;
+      name = "Bibata-Modern-Ice";
+    };
+    theme = {
+      package = pkgs.adw-gtk3;
+      name = "adw-gtk3";
+    };
+    gtk3.extraConfig = {
+      gtk-application-prefer-dark-theme = true;
+    };
+    gtk4.extraConfig = {
+      gtk-application-prefer-dark-theme = true;
+    };
+  };
+
   qt.enable = true;
   qt.platformTheme.name = "gtk";
   qt.style.name = "adwaita-dark";

@@ -18,6 +18,10 @@ This repository contains my personal NixOS configuration, featuring a customized
 - Random wallpaper selection on startup
 - Neovim configuration with LSP support
 - Various development tools and applications
+- Automatic startup of system tray applications:
+  - Network Manager (nm-applet)
+  - Bluetooth Manager (blueman-applet)
+  - Screenshot Tool (flameshot)
 
 ## Prerequisites
 
@@ -60,6 +64,7 @@ To customize this configuration:
 - `Mod4 + Shift + p`: Run dmenu
 - `Mod4 + Shift + d`: Launch Discord
 - `Mod4 + Shift + f`: Launch Floorp browser
+- `Mod4 + Shift + n`: Change to a random wallpaper
 
 ## License
 
