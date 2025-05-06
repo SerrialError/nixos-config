@@ -266,22 +266,7 @@ in {
   # environment.
   home.packages = with pkgs; [
     protonup
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
+    feh  # Add feh for wallpaper management
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -298,6 +283,28 @@ in {
     #   org.gradle.daemon.idletimeout=3600000
     # '';
   };
+
+  # Create and set up the wallpaper script
+  home.file.".local/bin/set-random-wallpaper.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+
+      # Get a random wallpaper from the wallpapers directory
+      WALLPAPER_DIR="$HOME/Pictures/wallpapers"
+      WALLPAPER=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) | shuf -n 1)
+
+      # Set the wallpaper using feh
+      if [ -n "$WALLPAPER" ]; then
+          feh --bg-fill "$WALLPAPER"
+      fi
+    '';
+    executable = true;
+  };
+
+  # Run the wallpaper script when X session starts
+  xsession.initExtra = ''
+    $HOME/.local/bin/set-random-wallpaper.sh
+  '';
 
   # Home Manager can also manage your environment variables through
   # 'home.sessionVariables'. These will be explicitly sourced when using a
