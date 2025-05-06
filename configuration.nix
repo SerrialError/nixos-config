@@ -161,14 +161,18 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   fonts.packages = with pkgs; [
-    nerdfonts
+    nerd-fonts.fira-code
+    nerd-fonts.hack
+    nerd-fonts.jetbrains-mono
   ];
+
   environment.systemPackages = with pkgs; [
     # PROS CLI
     (python3Packages.buildPythonPackage rec {
       pname = "pros-cli";
-      version = "3.5.4";
+      version = "3.5.5";
       doCheck = false;
+      # patches = [ /home/connor/git/nixos-config/set-version.patch ];
       nativeBuildInputs = with python3Packages; [
         pip
         setuptools
@@ -192,14 +196,14 @@
       src = fetchFromGitHub {
         owner = "purduesigbots";
         repo = pname;
-        rev = "v${version}";
-        sha256 = "sha256-kHGiYDIfB87lUvA/gCjOg890+GeqiGr7wBYWlAdUISE=";
+        rev = "${version}";
+        sha256 = "sha256-Lw3NJaFmJFt0g3N+jgmGLG5AMeMB4Tqk3d4mPPWvC/c=";
       };
     })
-
     vscode
     prismlauncher
     cups-printers
+    nodejs
     obsidian 
     unzip
     docker-compose
@@ -214,8 +218,10 @@
     dconf
     python3Full
     paraview
-    okular
     mpi
+    curlFull
+    nlohmann_json
+    glibc
     flameshot
     flex
     gcc-arm-embedded
@@ -226,10 +232,12 @@
     obs-studio
     python3Packages.pip
     lutris
+    code-cursor
     heroic
     floorp
     gcc
     sops
+    clang
     age
     ssh-to-age
     bitwarden
@@ -302,6 +310,6 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "25.05"; # Did you read the comment?
 
 }
