@@ -1,6 +1,6 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
 { config, pkgs, inputs, ... }:
 
@@ -93,7 +93,7 @@
     defaultSession = "none+i3";
   };
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account. Don't forget to set a password with 'passwd'.
   users.groups.git = {};
   users.users.git = {
     isSystemUser = true;
@@ -172,7 +172,7 @@
       pname = "pros-cli";
       version = "3.5.5";
       doCheck = false;
-      # patches = [ /home/connor/git/nixos-config/set-version.patch ];
+
       nativeBuildInputs = with python3Packages; [
         pip
         setuptools
@@ -199,6 +199,9 @@
         rev = "${version}";
         sha256 = "sha256-Lw3NJaFmJFt0g3N+jgmGLG5AMeMB4Tqk3d4mPPWvC/c=";
       };
+      postInstall = ''
+        echo "${version}" > $out/lib/python3.12/site-packages/version
+      '';
     })
     vscode
     prismlauncher
@@ -306,7 +309,7 @@
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like filen locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # on your system were taken. It's perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
