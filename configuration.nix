@@ -239,6 +239,7 @@
     stdenv.cc.cc.lib
     gnumake
     cmake
+    killall
     mpv
     obs-studio
     python3Packages.pip

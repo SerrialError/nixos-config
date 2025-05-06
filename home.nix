@@ -276,8 +276,10 @@ in {
       alsaSupport = true;
       mpdSupport = true;
       githubSupport = true;
-    })  # Add polybar with all necessary features
-    jetbrains-mono  # Font for polybar
+    })
+    brightnessctl  # For backlight control
+    pavucontrol    # For volume control
+    nerd-fonts.jetbrains-mono  # For CaskaydiaCove Nerd Font
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -316,131 +318,112 @@ in {
   home.file.".config/polybar/config.ini" = {
     text = ''
       [colors]
-      background = #282828
-      background-alt = #3c3836
-      foreground = #ebdbb2
-      foreground-alt = #a89984
-      primary = #b8bb26
-      secondary = #689d6a
-      alert = #fb4934
-      network-connected = #9b78dd
-      network-disconnected = #FF0000
+      background = #282A2E
+      background-alt = #373B41
+      foreground = #C5C8C6
+      primary = #F0C674
+      secondary = #8ABEB7
+      alert = #A54242
+      disabled = #707880
 
       [bar/main]
-      monitor = HDMI-0
       width = 100%
-      height = 24
-      offset-x = 0
-      offset-y = 0
-      radius = 0
-      fixed-center = true
-      background = #282828
-      foreground = #ebdbb2
-      border-size = 0
+      height = 24pt
+      radius = 9
+      background = ''${colors.background}
+      foreground = ''${colors.foreground}
+      line-size = 3pt
+      border-size = 4pt
       border-color = #00000000
-      padding-left = 1
+      padding-left = 0
       padding-right = 1
-      module-margin-left = 1
-      module-margin-right = 1
-      font-0 = "JetBrainsMono Nerd Font:size=10;3"
-      modules-left = i3
-      modules-center = date
-      modules-right = cpu memory pulseaudio network
+      module-margin = 1
+      separator = |
+      separator-foreground = ''${colors.disabled}
+      font-0 = "JetBrainsMono Nerd Font:size=10;2"
+      modules-left = systray xworkspaces xwindow
+      modules-right = battery temperature pulseaudio backlight date
+      cursor-click = pointer
+      cursor-scroll = ns-resize
+      enable-ipc = true
 
-      [module/tray]
+      [module/systray]
       type = internal/tray
-      tray-size = 16
-      tray-spacing = 2
-      tray-background = #282828
-      tray-offset-x = 0
-      tray-offset-y = 0
-      tray-padding = 2
-      tray-maxsize = 16
-      tray-scale = 1.0
-      tray-position = right
+      format-margin = 8px
+      tray-spacing = 8px
 
-      [module/i3]
-      type = internal/i3
-      format = <label-state> <label-mode>
-      label-mode = %mode%
-      label-mode-padding = 2
-      label-mode-foreground = #000
-      label-mode-background = #b8bb26
+      [module/xworkspaces]
+      type = internal/xworkspaces
+      label-active = %name%
+      label-active-background = ''${colors.background-alt}
+      label-active-underline = ''${colors.primary}
+      label-active-padding = 1
+      label-occupied = %name%
+      label-occupied-padding = 1
+      label-urgent = %name%
+      label-urgent-background = ''${colors.alert}
+      label-urgent-padding = 1
+      label-empty = %name%
+      label-empty-foreground = ''${colors.disabled}
+      label-empty-padding = 1
 
-      label-focused = %index%
-      label-focused-background = #3c3836
-      label-focused-underline = #b8bb26
-      label-focused-padding = 2
-      label-focused-font = 1
-
-      label-unfocused = %index%
-      label-unfocused-padding = 2
-      label-unfocused-font = 1
-
-      label-visible = %index%
-      label-visible-background = #3c3836
-      label-visible-underline = #b8bb26
-      label-visible-padding = 2
-      label-visible-font = 1
-
-      label-urgent = %index%
-      label-urgent-background = #fb4934
-      label-urgent-padding = 2
-      label-urgent-font = 1
-
-      # Enable click handlers
-      enable-click = true
-      enable-scroll = true
-
-      # Enable wrapping of workspace names
-      wrap-scroll = false
-
-      # Enable fuzzy matching on workspace names
-      fuzzy-match = true
-
-      [module/date]
-      type = internal/date
-      interval = 1.0
-      date = %Y-%m-%d%
-      time = %H:%M
-      format = <label>
-      label = %date% %time%
-      label-foreground = #a89984
-
-      [module/cpu]
-      type = internal/cpu
-      interval = 1
-      format-prefix = "CPU "
-      format-prefix-foreground = #a89984
-      format-underline = #f90000
-      label = %percentage:2%%
-
-      [module/memory]
-      type = internal/memory
-      interval = 1
-      format-prefix = "RAM "
-      format-prefix-foreground = #a89984
-      format-underline = #4bffdc
-      label = %percentage_used:2%%
+      [module/xwindow]
+      type = internal/xwindow
+      label = %title:0:60:...%
 
       [module/pulseaudio]
       type = internal/pulseaudio
       format-volume-prefix = "VOL "
-      format-volume-prefix-foreground = #a89984
-      format-volume-underline = #9b78dd
+      format-volume-prefix-foreground = ''${colors.primary}
+      format-volume = <label-volume>
       label-volume = %percentage%%
       label-muted = muted
-      label-muted-foreground = #666
+      label-muted-foreground = ''${colors.disabled}
 
-      [module/network]
-      type = internal/network
-      interface-type = wireless
-      interval = 3.0
-      format-connected = <label-connected>
-      format-disconnected = <label-disconnected>
-      label-connected = %{F#9b78dd}%{F-} %essid%
-      label-disconnected = %{F#FF0000}%{F-}offline
-      label-disconnected-foreground = #a89984
+      [module/battery]
+      type = internal/battery
+      format-bat = <label-bat>
+      label-bat = %percentage%%
+      format-charging = <label-charging>
+      label-charging = Charging %percentage%%
+      format-low = <label-low>
+      label-low = BATTERY LOW %percentage%%
+      low-at = 20
+      battery = BAT0
+      adapter = ADP0
+      poll-interval = 5
+
+      [module/date]
+      type = internal/date
+      interval = 1
+      date = %H:%M
+      date-alt = %Y-%m-%d %H:%M:%S
+      label = %date%
+      label-foreground = ''${colors.primary}
+
+      [module/backlight]
+      type = internal/backlight
+      card = intel_backlight
+      format = <label>
+      label = %percentage%%
+      label-foreground = ''${colors.foreground}
+
+      [module/temperature]
+      type = internal/temperature
+      interval = 0.5
+      thermal-zone = 0
+      zone-type = x86_pkg_temp
+      hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input
+      base-temperature = 20
+      warn-temperature = 60
+      label = %temperature-f%
+
+      [module/mpd]
+      type = internal/mpd
+      host = 127.0.0.1
+      port = 6600
+      interval = 2
+      label-song = %title%
     '';
   };
 
@@ -450,7 +433,7 @@ in {
       #!/usr/bin/env bash
 
       # Terminate already running bar instances
-      pkill -x polybar
+      killall -q polybar || true
 
       # Wait until the processes have been shut down
       while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
@@ -461,10 +444,35 @@ in {
     executable = true;
   };
 
-  # Run the wallpaper script and Polybar when X session starts
+  # Create brightness script for Polybar
+  home.file.".config/polybar/scripts/brightnes-onscroll.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+      
+      # Get current brightness
+      current=$(brightnessctl g)
+      max=$(brightnessctl m)
+      
+      # Calculate percentage
+      percent=$((current * 100 / max))
+      
+      # Output with icon
+      if [ "$percent" -gt 80 ]; then
+          echo "󰃠 $percent%"
+      elif [ "$percent" -gt 50 ]; then
+          echo "󰃟 $percent%"
+      elif [ "$percent" -gt 20 ]; then
+          echo "󰃞 $percent%"
+      else
+          echo "󰃝 $percent%"
+      fi
+    '';
+    executable = true;
+  };
+
+  # Run the wallpaper script when X session starts
   xsession.initExtra = ''
     $HOME/.local/bin/set-random-wallpaper.sh
-    $HOME/.config/polybar/launch.sh
   '';
 
   # Home Manager can also manage your environment variables through
@@ -489,6 +497,17 @@ in {
       "\${HOME}/.steam/root/compatibilitytools.d";
   };
 
+  services.polybar = {
+    enable = true;
+    package = pkgs.polybar.override {
+      i3Support = true;
+      pulseSupport = true;
+      alsaSupport = true;
+      mpdSupport = true;
+      githubSupport = true;
+    };
+    script = "polybar main &";
+  };
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
