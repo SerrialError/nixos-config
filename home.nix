@@ -56,6 +56,9 @@ in {
         outer = 5;
       };
 
+      # Disable i3bar
+      bars = [];
+
       # Extend or override default keybindings
       keybindings = lib.mkOptionDefault {
         "${modifier}+Return" = "exec alacritty";
@@ -267,6 +270,14 @@ in {
   home.packages = with pkgs; [
     protonup
     feh  # Add feh for wallpaper management
+    (polybar.override {
+      i3Support = true;
+      pulseSupport = true;
+      alsaSupport = true;
+      mpdSupport = true;
+      githubSupport = true;
+    })  # Add polybar with all necessary features
+    jetbrains-mono  # Font for polybar
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -301,9 +312,159 @@ in {
     executable = true;
   };
 
-  # Run the wallpaper script when X session starts
+  # Polybar configuration
+  home.file.".config/polybar/config.ini" = {
+    text = ''
+      [colors]
+      background = #282828
+      background-alt = #3c3836
+      foreground = #ebdbb2
+      foreground-alt = #a89984
+      primary = #b8bb26
+      secondary = #689d6a
+      alert = #fb4934
+      network-connected = #9b78dd
+      network-disconnected = #FF0000
+
+      [bar/main]
+      monitor = HDMI-0
+      width = 100%
+      height = 24
+      offset-x = 0
+      offset-y = 0
+      radius = 0
+      fixed-center = true
+      background = #282828
+      foreground = #ebdbb2
+      border-size = 0
+      border-color = #00000000
+      padding-left = 1
+      padding-right = 1
+      module-margin-left = 1
+      module-margin-right = 1
+      font-0 = "JetBrainsMono Nerd Font:size=10;3"
+      modules-left = i3
+      modules-center = date
+      modules-right = cpu memory pulseaudio network
+
+      [module/tray]
+      type = internal/tray
+      tray-size = 16
+      tray-spacing = 2
+      tray-background = #282828
+      tray-offset-x = 0
+      tray-offset-y = 0
+      tray-padding = 2
+      tray-maxsize = 16
+      tray-scale = 1.0
+      tray-position = right
+
+      [module/i3]
+      type = internal/i3
+      format = <label-state> <label-mode>
+      label-mode = %mode%
+      label-mode-padding = 2
+      label-mode-foreground = #000
+      label-mode-background = #b8bb26
+
+      label-focused = %index%
+      label-focused-background = #3c3836
+      label-focused-underline = #b8bb26
+      label-focused-padding = 2
+      label-focused-font = 1
+
+      label-unfocused = %index%
+      label-unfocused-padding = 2
+      label-unfocused-font = 1
+
+      label-visible = %index%
+      label-visible-background = #3c3836
+      label-visible-underline = #b8bb26
+      label-visible-padding = 2
+      label-visible-font = 1
+
+      label-urgent = %index%
+      label-urgent-background = #fb4934
+      label-urgent-padding = 2
+      label-urgent-font = 1
+
+      # Enable click handlers
+      enable-click = true
+      enable-scroll = true
+
+      # Enable wrapping of workspace names
+      wrap-scroll = false
+
+      # Enable fuzzy matching on workspace names
+      fuzzy-match = true
+
+      [module/date]
+      type = internal/date
+      interval = 1.0
+      date = %Y-%m-%d%
+      time = %H:%M
+      format = <label>
+      label = %date% %time%
+      label-foreground = #a89984
+
+      [module/cpu]
+      type = internal/cpu
+      interval = 1
+      format-prefix = "CPU "
+      format-prefix-foreground = #a89984
+      format-underline = #f90000
+      label = %percentage:2%%
+
+      [module/memory]
+      type = internal/memory
+      interval = 1
+      format-prefix = "RAM "
+      format-prefix-foreground = #a89984
+      format-underline = #4bffdc
+      label = %percentage_used:2%%
+
+      [module/pulseaudio]
+      type = internal/pulseaudio
+      format-volume-prefix = "VOL "
+      format-volume-prefix-foreground = #a89984
+      format-volume-underline = #9b78dd
+      label-volume = %percentage%%
+      label-muted = muted
+      label-muted-foreground = #666
+
+      [module/network]
+      type = internal/network
+      interface-type = wireless
+      interval = 3.0
+      format-connected = <label-connected>
+      format-disconnected = <label-disconnected>
+      label-connected = %{F#9b78dd}%{F-} %essid%
+      label-disconnected = %{F#FF0000}%{F-}offline
+      label-disconnected-foreground = #a89984
+    '';
+  };
+
+  # Create Polybar launch script
+  home.file.".config/polybar/launch.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+
+      # Terminate already running bar instances
+      pkill -x polybar
+
+      # Wait until the processes have been shut down
+      while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
+
+      # Launch Polybar
+      polybar main &
+    '';
+    executable = true;
+  };
+
+  # Run the wallpaper script and Polybar when X session starts
   xsession.initExtra = ''
     $HOME/.local/bin/set-random-wallpaper.sh
+    $HOME/.config/polybar/launch.sh
   '';
 
   # Home Manager can also manage your environment variables through
