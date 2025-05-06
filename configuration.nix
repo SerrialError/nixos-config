@@ -21,6 +21,11 @@
   nix.extraOptions = ''
     extra-sandbox-paths = ${builtins.path { path = ./secrets; name = "secrets"; }}
   '';
+
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
+
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sdb";
@@ -124,7 +129,7 @@
     users = {
       "connor" = import ./home.nix;
     };
-    useGlobalPkgs = true;
+    useGlobalPkgs = false;  # Changed to false to allow nixpkgs configuration
   };
   hardware.graphics = {
     enable = true;
@@ -161,10 +166,6 @@
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
-  # Allow unfree packaes
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
-
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   fonts.packages = with pkgs; [

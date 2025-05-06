@@ -30,10 +30,11 @@ in {
   nixpkgs = {
     overlays = [
       (final: prev: {
-        vimPlugins = prev.vimPlugins {
+        vimPlugins = prev.vimPlugins // {
           own-onedark-nvim = prev.vimUtils.buildVimPlugin {
-            name = "onedark";
-            src = inputs.plugin-onedark;
+            pname = "own-onedark-nvim";
+            version = "1.0.0";
+            src = ./nvim/onedark.nvim;
           };
         };
       })
