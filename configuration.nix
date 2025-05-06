@@ -16,6 +16,11 @@
   sops.defaultSopsFormat = "yaml";
   sops.age.keyFile = "/home/connor/.config/sops/age/keys.txt";
   sops.secrets.ssh-auth-keys = { owner = "git"; };
+  
+  # Make the secrets file available during evaluation
+  nix.extraOptions = ''
+    extra-sandbox-paths = ${builtins.path { path = ./secrets; name = "secrets"; }}
+  '';
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sdb";
@@ -102,7 +107,9 @@
     createHome = true;
     shell = "${pkgs.git}/bin/git-shell";
     openssh.authorizedKeys.keys = [
-      (builtins.readFile (toString config.sops.secrets.ssh-auth-keys.path))
+      # Instead of reading from a file, we'll use a direct string
+      # You'll need to replace this with your actual SSH public key
+      "ssh-rsa AAAA..." # Replace with your actual public key
     ];
   };
 
