@@ -41,6 +41,7 @@ in {
         { command = "sleep 2 && blueman-applet"; }
         { command = "flameshot"; }
         { command = "picom --experimental-backends"; }
+        { command = "lxappearance"; }  # Apply GTK theme
       ];
     };
   };
