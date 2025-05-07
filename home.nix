@@ -1,13 +1,18 @@
 { config, inputs, pkgs, lib, ... }:
 
-{
+let
+  configDir = builtins.path {
+    path = ./.;
+    name = "home-config";
+  };
+in {
   imports = [
     inputs.nix-colors.homeManagerModules.default
-    ./features/alacritty.nix
-    ./features/wm/i3.nix
-    ./features/wm/polybar.nix
-    ./features/desktop/gtk.nix
-    ./features/desktop/lf.nix
+    "${configDir}/alacritty.nix"
+    "${configDir}/wm/i3.nix"
+    "${configDir}/wm/polybar.nix"
+    "${configDir}/desktop/gtk.nix"
+    "${configDir}/desktop/lf.nix"
   ];
 
   # Color scheme configuration
