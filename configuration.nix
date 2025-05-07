@@ -287,6 +287,7 @@
     wget
     alacritty
     mangohud
+    xclip  # Add xclip for clipboard support
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -335,10 +336,10 @@
   };
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ 22 25565 8443 ];
-  # networking.firewall.allowedUDPPorts = [ 22 25565 8443 ];
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 ];
+  networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like filen locations and database versions

@@ -28,7 +28,7 @@ in {
   # Home Manager configuration
   home.username = "connor";
   home.homeDirectory = "/home/connor";
-  home.stateVersion = "24.05";
+  home.stateVersion = "25.05";
 
   # Neovim configuration
   programs.neovim = {
@@ -44,6 +44,21 @@ in {
       isort
       flake8
     ];
+    extraPackages = with pkgs; [
+      # Clipboard support
+      xclip
+      wl-clipboard
+    ];
+    extraLuaConfig = ''
+      -- Clipboard settings
+      vim.opt.clipboard = 'unnamedplus'
+      vim.keymap.set('n', 'y', '"+y')
+      vim.keymap.set('v', 'y', '"+y')
+      vim.keymap.set('n', 'Y', '"+Y')
+      vim.keymap.set('n', 'p', '"+p')
+      vim.keymap.set('v', 'p', '"+p')
+      vim.keymap.set('n', 'P', '"+P')
+    '';
     plugins = with pkgs.vimPlugins; [
       # LSP and Completion
       nvim-cmp
@@ -200,6 +215,7 @@ in {
   home.sessionVariables = {
     EDITOR = "nvim";
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
+    XDG_SESSION_TYPE = "x11";  # Ensure X11 clipboard is used
   };
 
   # Let Home Manager install and manage itself.
