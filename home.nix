@@ -67,7 +67,7 @@ in {
         "${modifier}+Shift+d" = "exec discord";
         "${modifier}+Shift+f" = "exec floorp";
         "${modifier}+Shift+n" = "exec $HOME/.local/bin/set-random-wallpaper.sh";
-      };
+    };
 
       # Startup applications
       startup = [
