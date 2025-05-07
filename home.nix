@@ -1,6 +1,8 @@
 { config, inputs, pkgs, lib, ... }:
 
 let
+  inherit (builtins) readFile;
+  inherit (lib) fileContents;
   configDir = builtins.path {
     path = ./.;
     name = "home-config";
@@ -8,11 +10,11 @@ let
 in {
   imports = [
     inputs.nix-colors.homeManagerModules.default
-    "${configDir}/alacritty.nix"
-    "${configDir}/wm/i3.nix"
-    "${configDir}/wm/polybar.nix"
-    "${configDir}/desktop/gtk.nix"
-    "${configDir}/desktop/lf.nix"
+    (import ./alacritty.nix)
+    (import ./wm/i3.nix)
+    (import ./wm/polybar.nix)
+    (import ./desktop/gtk.nix)
+    (import ./desktop/lf.nix)
   ];
 
   # Color scheme configuration
@@ -27,6 +29,70 @@ in {
   home.username = "connor";
   home.homeDirectory = "/home/connor";
   home.stateVersion = "24.05";
+
+  # Neovim configuration
+  programs.neovim = {
+    enable = true;
+    package = pkgs.neovim-unwrapped;
+    viAlias = true;
+    vimAlias = true;
+    withNodeJs = true;
+    withPython3 = true;
+    extraPython3Packages = ps: with ps; [
+      pynvim
+      black
+      isort
+      flake8
+    ];
+    plugins = with pkgs.vimPlugins; [
+      # LSP and Completion
+      nvim-cmp
+      cmp-nvim-lsp
+      cmp-buffer
+      cmp-path
+      cmp-cmdline
+      lspkind-nvim
+      nvim-lspconfig
+      luasnip
+      friendly-snippets
+      neodev-nvim
+      
+      # Telescope
+      telescope-nvim
+      plenary-nvim
+      telescope-fzf-native-nvim
+      
+      # Treesitter
+      nvim-treesitter
+      nvim-treesitter-textobjects
+      
+      # UI
+      lualine-nvim
+      nvim-web-devicons
+      bufferline-nvim
+      nvim-colorizer-lua
+      
+      # Git
+      gitsigns-nvim
+      
+      # Utilities
+      nvim-autopairs
+      nvim-ts-context-commentstring
+      comment-nvim
+      vim-surround
+      vim-repeat
+      
+      # Themes
+      onedark-nvim
+      gruvbox-nvim
+    ];
+  };
+
+  # Link your Neovim configuration
+  home.file.".config/nvim" = {
+    source = ./nvim;
+    recursive = true;
+  };
 
   # Custom vim plugins overlay
   nixpkgs = {
@@ -79,6 +145,20 @@ in {
 
   # Required packages
   home.packages = with pkgs; [
+    # Development tools
+    nil       # Nix language server
+    nodePackages.typescript-language-server
+    nodePackages.vscode-langservers-extracted
+    rust-analyzer
+    lua-language-server
+    python3Packages.python-lsp-server
+    clang-tools
+    gopls
+    haskell-language-server
+    texlab
+    zls
+
+    # System utilities
     protonup
     feh  # For wallpaper management
   ];

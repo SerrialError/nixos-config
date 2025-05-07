@@ -15,7 +15,10 @@
   sops.defaultSopsFile = ./secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";
   sops.age.keyFile = "/home/connor/.config/sops/age/keys.txt";
-  sops.secrets.ssh-auth-keys = { owner = "git"; };
+  sops.secrets.ssh-auth-keys = { 
+    owner = "git";
+    mode = "0440";  # Read-only for owner and group
+  };
   
   # Make the secrets file available during evaluation
   nix.extraOptions = ''
@@ -111,11 +114,29 @@
     home = "/var/lib/git-server";
     createHome = true;
     shell = "${pkgs.git}/bin/git-shell";
-    openssh.authorizedKeys.keys = [
-      # Instead of reading from a file, we'll use a direct string
-      # You'll need to replace this with your actual SSH public key
-      "ssh-rsa AAAA..." # Replace with your actual public key
-    ];
+    # The authorized keys will be managed by the systemd service
+  };
+
+  # Create a systemd service to set up the authorized keys
+  systemd.services.git-authorized-keys = {
+    description = "Set up Git user's authorized keys";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "sops-nix.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "git";
+      Group = "git";
+    };
+    script = ''
+      # Create .ssh directory if it doesn't exist
+      mkdir -p /var/lib/git-server/.ssh
+      chmod 700 /var/lib/git-server/.ssh
+
+      # Copy the authorized keys file
+      cp ${config.sops.secrets.ssh-auth-keys.path} /var/lib/git-server/.ssh/authorized_keys
+      chmod 600 /var/lib/git-server/.ssh/authorized_keys
+    '';
   };
 
   users.users.connor = {
