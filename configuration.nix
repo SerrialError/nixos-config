@@ -143,7 +143,6 @@
     isNormalUser = true;
     description = "connor-pc";
     extraGroups = [ "networkmanager" "wheel" "docker" ];
-    packages = with pkgs; [];
   };
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
