@@ -106,9 +106,12 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
+    jack.enable = true;  # Enable JACK support
+    wireplumber.enable = true;  # Use wireplumber instead of media-session
   };
+
+  # Disable PulseAudio since we're using PipeWire
+  services.pulseaudio.enable = false;
 
   # Configure keymap in X11
   services.xserver = {
@@ -310,6 +313,7 @@
     adwaita-icon-theme  # Add icon theme
     papirus-icon-theme  # Add Papirus icon theme
     gtk3  # Add GTK3 for icon support
+    pulseaudio  # Add pulseaudio for pactl command
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
