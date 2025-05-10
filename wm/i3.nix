@@ -34,9 +34,9 @@ in {
       keybindings = lib.mkOptionDefault {
         "${modifier}+Return" = "exec alacritty";
         "${modifier}+q" = "kill";
-        "${modifier}+d" = "exec rofi -modi drun -show drun -dump-xresources";
-        "${modifier}+Shift+d" = "exec rofi -modi run -show run";
-        "${modifier}+Tab" = "exec rofi -modi window -show window";
+        "${modifier}+Shift+p" = "exec rofi -modi drun -show drun -dump-xresources";
+        "${modifier}+Shift+d" = "exec discord";
+        "${modifier}+Shift+f" = "exec floorp";
       };
 
       # Startup applications
