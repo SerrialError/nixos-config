@@ -178,6 +178,131 @@ in {
     feh  # For wallpaper management
   ];
 
+  # Rofi configuration
+  programs.rofi = {
+    enable = true;
+    theme = "gruvbox-dark";
+    configPath = ".config/rofi/config.rasi";
+    extraConfig = {
+      modi = "drun,run,window";
+      show-icons = true;
+      icon-theme = "Papirus";
+      font = "Fira Code 12";
+      width = 50;
+      lines = 10;
+      padding = 20;
+      bw = 2;
+      separator-style = "none";
+      hide-scrollbar = true;
+      fullscreen = false;
+      location = 0;
+      fixed-num-lines = true;
+      terminal = "alacritty";
+    };
+  };
+
+  # Create Rofi theme directory and theme file
+  home.file.".config/rofi/themes/gruvbox-dark.rasi" = {
+    text = ''
+      * {
+          bg: #282828;
+          bg-alt: #3c3836;
+          fg: #ebdbb2;
+          fg-alt: #a89984;
+          
+          border: 0;
+          margin: 0;
+          padding: 0;
+          spacing: 0;
+      }
+
+      window {
+          width: 50%;
+          background-color: @bg;
+      }
+
+      element {
+          padding: 8 12;
+          background-color: transparent;
+      }
+
+      element normal.normal {
+          background-color: transparent;
+          text-color: @fg;
+      }
+
+      element normal.urgent {
+          background-color: #fb4934;
+          text-color: @bg;
+      }
+
+      element normal.active {
+          background-color: #458588;
+          text-color: @bg;
+      }
+
+      element selected.normal {
+          background-color: #458588;
+          text-color: @bg;
+      }
+
+      element selected.urgent {
+          background-color: #fb4934;
+          text-color: @bg;
+      }
+
+      element selected.active {
+          background-color: #458588;
+          text-color: @bg;
+      }
+
+      element-text {
+          background-color: transparent;
+          text-color: inherit;
+          vertical-align: 0.5;
+      }
+
+      element-icon {
+          background-color: transparent;
+          text-color: inherit;
+          size: 24;
+          padding: 0 10 0 0;
+      }
+
+      entry {
+          padding: 12;
+          background-color: @bg-alt;
+      }
+
+      inputbar {
+          children: [entry];
+      }
+
+      listview {
+          background-color: @bg;
+          columns: 1;
+          lines: 10;
+      }
+
+      mainbox {
+          children: [inputbar, listview];
+      }
+
+      prompt {
+          enabled: true;
+          padding: 12 0 0 0;
+          background-color: @bg-alt;
+      }
+
+      textbox-prompt-colon {
+          expand: false;
+          str: ":";
+          margin: 0 0.3em 0 0;
+          text-color: @fg-alt;
+      }
+    '';
+  };
+
   # Create and set up the wallpaper script
   home.file.".local/bin/set-random-wallpaper.sh" = {
     text = ''
@@ -216,11 +341,33 @@ in {
     EDITOR = "nvim";
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
     XDG_SESSION_TYPE = "x11";  # Ensure X11 clipboard is used
+    XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
+  };
+
+  # Create .profile file
+  home.file.".profile" = {
+    text = ''
+      # Load environment variables
+      export EDITOR="nvim"
+      export STEAM_EXTRA_COMPAT_TOOLS_PATHS="$HOME/.steam/root/compatibilitytools.d"
+      export XDG_SESSION_TYPE="x11"
+      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
+    '';
   };
 
   # Let Home Manager install and manage itself.
   programs.home-manager = {
     enable = true;
+  };
+
+  # Create Rofi launcher script
+  home.file.".local/bin/rofi-launcher.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
+      rofi -modi drun -show drun -dump-xresources
+    '';
+    executable = true;
   };
 }
 

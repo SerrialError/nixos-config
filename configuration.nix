@@ -48,6 +48,24 @@
   };
   users.extraGroups.docker.members = [ "connor" ];
 
+  # Enable Bluetooth
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+  services.blueman.enable = true;
+
+  # Enable Flatpak
+  services.flatpak.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config = {
+      common.default = "*";
+    };
+    configPackages = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";
 
@@ -287,6 +305,11 @@
     alacritty
     mangohud
     xclip  # Add xclip for clipboard support
+    rofi    # Add rofi for application launcher
+    desktop-file-utils  # Add desktop-file-utils for desktop database management
+    adwaita-icon-theme  # Add icon theme
+    papirus-icon-theme  # Add Papirus icon theme
+    gtk3  # Add GTK3 for icon support
   ];
 
   # Some programs need SUID wrappers, can be configured further or are

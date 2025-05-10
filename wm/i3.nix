@@ -9,6 +9,11 @@ in {
     config = {
       modifier = "Mod4";
       terminal = "alacritty";
+      menu = "rofi -show drun";
+      fonts = {
+        names = [ "Fira Code" ];
+        size = 10.0;
+      };
 
       gaps = {
         inner = 10;
@@ -29,10 +34,9 @@ in {
       keybindings = lib.mkOptionDefault {
         "${modifier}+Return" = "exec alacritty";
         "${modifier}+q" = "kill";
-        "${modifier}+Shift+p" = "exec ${pkgs.dmenu}/bin/dmenu_run";
-        "${modifier}+Shift+d" = "exec discord";
-        "${modifier}+Shift+f" = "exec floorp";
-        "${modifier}+Shift+n" = "exec $HOME/.local/bin/set-random-wallpaper.sh";
+        "${modifier}+d" = "exec rofi -modi drun -show drun -dump-xresources";
+        "${modifier}+Shift+d" = "exec rofi -modi run -show run";
+        "${modifier}+Tab" = "exec rofi -modi window -show window";
       };
 
       # Startup applications
@@ -43,6 +47,45 @@ in {
         { command = "picom --experimental-backends"; }
         { command = "lxappearance"; }  # Apply GTK theme
       ];
+
+      colors = {
+        focused = {
+          border = "#458588";
+          background = "#458588";
+          text = "#ffffff";
+          indicator = "#ffffff";
+          childBorder = "#458588";
+        };
+        focusedInactive = {
+          border = "#3c3836";
+          background = "#3c3836";
+          text = "#ffffff";
+          indicator = "#4c4c4c";
+          childBorder = "#3c3836";
+        };
+        unfocused = {
+          border = "#282828";
+          background = "#282828";
+          text = "#888888";
+          indicator = "#292d2e";
+          childBorder = "#282828";
+        };
+        urgent = {
+          border = "#fb4934";
+          background = "#fb4934";
+          text = "#ffffff";
+          indicator = "#fb4934";
+          childBorder = "#fb4934";
+        };
+        placeholder = {
+          border = "#000000";
+          background = "#0c0c0c";
+          text = "#ffffff";
+          indicator = "#000000";
+          childBorder = "#0c0c0c";
+        };
+        background = "#282828";
+      };
     };
   };
 
