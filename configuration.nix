@@ -253,6 +253,7 @@
         echo "${version}" > $out/lib/python3.12/site-packages/version
       '';
     })
+    tmux
     vscode
     prismlauncher
     cups-printers
