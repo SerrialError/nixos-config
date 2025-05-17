@@ -26,7 +26,8 @@
   '';
 
   # Allow unfree packages
-  nixpkgs.overlays = [ inputs.nix-minecraft.overlay (import inputs.rust-overlay) ];
+  nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Bootloader.
   boot.loader.grub.enable = true;
@@ -307,7 +308,6 @@
     wget
     alacritty
     mangohud
-    cargo
     xclip  # Add xclip for clipboard support
     rofi    # Add rofi for application launcher
     desktop-file-utils  # Add desktop-file-utils for desktop database management
@@ -315,21 +315,6 @@
     papirus-icon-theme  # Add Papirus icon theme
     gtk3  # Add GTK3 for icon support
     pulseaudio  # Add pulseaudio for pactl command
-    inputs.cargo-v5.packages.${pkgs.system}.cargo-v5-full  # Add cargo-v5
-    llvmPackages.bintools  # Add LLVM tools
-    cargo-binutils  # Add cargo-binutils
-    (pkgs.rust-bin.nightly."2025-02-18".default.override {  # Add Rust nightly
-      extensions = [ "rust-analyzer" "rust-src" "clippy" ];
-    })
-    # QEMU and virtualization tools
-    qemu_full
-    virt-manager
-    virt-viewer
-    libvirt
-    OVMF
-    swtpm
-    quickemu  # Add Quickemu for easy VM management
-    pkgs.vex-v5-simulator  # Add VEX V5 QEMU emulator
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -378,9 +363,9 @@
   };
 
   # Open ports in the firewall.
-  networking.firewall.enable = false;
-  # networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 ];
-  # networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 ];
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 ];
+  networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 ];
   # Or disable the firewall altogether.
 
   # This value determines the NixOS release from which the default
@@ -390,18 +375,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
-
-  # Enable virtualization
-  virtualisation = {
-    libvirtd = {
-      enable = true;
-      qemu = {
-        package = pkgs.qemu_full;
-        runAsRoot = true;
-      };
-    };
-  };
-
-  # Add virtualization group
-  users.extraGroups.libvirtd.members = [ "connor" ];
 }
