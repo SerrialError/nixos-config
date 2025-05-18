@@ -300,10 +300,12 @@
     bitwarden
     (pkgs.discord.override {
       # remove any overrides that you don't want
-       withOpenASAR = false;
-       withVencord = false;
+       withOpenASAR = true;
+       withVencord = true;
      })       
     rsync
+    texlive.combined.scheme-full
+    asymptote
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     alacritty
@@ -374,5 +376,5 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.05"; # Did you read the comment?
+  system.stateVersion = "25.11"; # Did you read the comment?
 }
