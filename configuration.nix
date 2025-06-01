@@ -12,6 +12,18 @@
       inputs.nix-minecraft.nixosModules.minecraft-servers
       inputs.sops-nix.nixosModules.sops
     ];
+  # Add additional storage mounts
+  fileSystems."/mnt/storage" = {
+    device = "/dev/sda1";
+    fsType = "ext4";
+    options = [ "noatime" "nodiratime" "discard" ];
+  };
+
+  fileSystems."/mnt/nvme" = {
+    device = "/dev/nvme0n1p1";
+    fsType = "ext4";
+    options = [ "noatime" "nodiratime" "discard" ];
+  };
   sops.defaultSopsFile = ./secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";
   sops.age.keyFile = "/home/connor/.config/sops/age/keys.txt";
@@ -159,6 +171,10 @@
       chmod 600 /var/lib/git-server/.ssh/authorized_keys
     '';
   };
+  systemd.tmpfiles.rules = [
+    "d /mnt/nvme 0755 connor users -"
+    "d /mnt/storage  0755 connor users -"
+  ];
 
   users.users.connor = {
     isNormalUser = true;
@@ -322,15 +338,14 @@
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   programs.mtr.enable = true;
+  programs.thunar.enable = true;
+  programs.steam.enable = true;
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
   };      
-  programs.thunar.enable = true;
-  programs.steam.enable = true;
   # Ensure Bash is available as a shell
   environment.shells = [ pkgs.bashInteractive ];
-
   # Configure bash aliases and interactive shell settings
   programs.bash = {
     interactiveShellInit = ''
