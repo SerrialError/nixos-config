@@ -369,5 +369,8 @@ in {
     '';
     executable = true;
   };
+
+  # Update the terminal path in i3 config
+  xsession.windowManager.i3.config.terminal = "${pkgs.alacritty}/bin/alacritty";
 }
 

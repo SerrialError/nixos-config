@@ -97,7 +97,7 @@
   };
   security.rtkit.enable = true;
   services.avahi = {
-    enable = true;
+    enable = false;
     nssmdns4 = true;
     openFirewall = true;
     publish = {
@@ -129,16 +129,32 @@
   services.xserver = {
     videoDrivers = ["nvidia"];
     enable = true;
+    displayManager = {
+      lightdm = {
+        enable = true;
+      };
+    };
     windowManager.i3.enable = true;
     xkb.layout = "us";
     xkb.variant = "";
+    # Add NVIDIA-specific X server configuration
+    config = ''
+      Section "Device"
+        Identifier "nvidia"
+        Driver "nvidia"
+        Option "AllowIndirectGLXProtocol" "off"
+        Option "TripleBuffer" "true"
+        Option "UseEvents" "true"
+        Option "AllowFlipping" "true"
+        Option "UseEdidFreq" "true"
+        Option "RegistryDwords" "EnableBrightnessControl=1"
+        Option "SidebandSocketPath" "/run/nvidia-xdriver"
+      EndSection
+    '';
   };
   services.displayManager = {
-    sddm.enable = true;
-    sddm.theme = "${import ./sddm-theme.nix { inherit pkgs; }}";
     defaultSession = "none+i3";
   };
-
   # Define a user account. Don't forget to set a password with 'passwd'.
   users.groups.git = {};
   users.users.git = {
@@ -171,7 +187,9 @@
       chmod 600 /var/lib/git-server/.ssh/authorized_keys
     '';
   };
+  # Create the sideband socket directory with proper permissions
   systemd.tmpfiles.rules = [
+    "d /run/nvidia-xdriver 0755 root root -"
     "d /mnt/nvme 0755 connor users -"
     "d /mnt/storage  0755 connor users -"
   ];
@@ -192,38 +210,36 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+    extraPackages = with pkgs; [
+      nvidia-vaapi-driver
+      libvdpau-va-gl
+    ];
+    extraPackages32 = with pkgs.pkgsi686Linux; [
+      libvdpau-va-gl
+    ];
   };
   hardware.nvidia = {
-
     # Modesetting is required.
     modesetting.enable = true;
 
     # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
-    # of just the bare essentials.
     powerManagement.enable = false;
-
-    # Fine-grained power management. Turns off GPU when not in use.
-    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
     powerManagement.finegrained = false;
 
-    # Use the NVidia open source kernel module (not to be confused with the
-    # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of 
-    # supported GPUs is at: 
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
-    # Only available from driver 515.43.04+
-    # Currently alpha-quality/buggy, so false is currently the recommended setting.
+    # Use the NVidia open source kernel module
     open = false;
 
-    # Enable the Nvidia settings menu,
-	# accessible via `nvidia-settings`.
+    # Enable the Nvidia settings menu
     nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
     package = config.boot.kernelPackages.nvidiaPackages.stable;
+
+    # Add these new settings
+    forceFullCompositionPipeline = true;
+    nvidiaPersistenced = true;
   };
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   fonts.packages = with pkgs; [
@@ -273,7 +289,7 @@
     vscode
     prismlauncher
     cups-printers
-    nodejs
+    kitty
     obsidian 
     unzip
     docker-compose
@@ -324,7 +340,6 @@
     asymptote
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
-    alacritty
     mangohud
     xclip  # Add xclip for clipboard support
     rofi    # Add rofi for application launcher
@@ -333,12 +348,38 @@
     papirus-icon-theme  # Add Papirus icon theme
     gtk3  # Add GTK3 for icon support
     pulseaudio  # Add pulseaudio for pactl command
+    # Add OpenGL-related packages
+    libglvnd
+    btop-cuda
+    glfw
+    xorg.libX11
+    xorg.libXext
+    xorg.libXrender
+    xorg.libXi
+    xorg.libXcursor
+    xorg.libXfixes
+    xorg.libXrandr
+    xorg.libXinerama
   ];
+
+  # Add environment variables for OpenGL
+  environment.variables = {
+    LIBVA_DRIVER_NAME = "nvidia";
+    GBM_BACKEND = "nvidia-drm";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    __EGL_VENDOR_LIBRARY_FILENAMES = "/run/opengl-driver/share/glvnd/egl_vendor.d/10_nvidia.json";
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   programs.mtr.enable = true;
-  programs.thunar.enable = true;
+  programs.thunar = {
+    enable = true;
+    plugins = with pkgs.xfce; [
+      thunar-archive-plugin
+      thunar-volman
+    ];
+  };
   programs.steam.enable = true;
   programs.gnupg.agent = {
     enable = true;
@@ -378,6 +419,8 @@
       };
     };
   };
+  services.gvfs.enable = true; # Mount, trash, and other functionalities
+  services.tumbler.enable = true; # Thumbnail support for images
 
   # Open ports in the firewall.
   networking.firewall.enable = true;
@@ -391,5 +434,5 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.11"; # Did you read the comment?
+  system.stateVersion = "25.05"; # Did you read the comment?
 }

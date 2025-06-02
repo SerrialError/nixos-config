@@ -3,6 +3,18 @@
 {
   programs.alacritty.enable = true;
   programs.alacritty.settings = {
+    # Add NVIDIA-specific settings
+    env = {
+      WINIT_UNIX_BACKEND = "x11";
+    };
+    window = {
+      decorations = "none";
+      dynamic_title = true;
+      gtk_theme_variant = "dark";
+    };
+    graphics = {
+      backend = "glx";
+    };
     colors = with config.colorScheme.palette; {
       bright = {
         black = "0x${base00}";
