@@ -208,14 +208,11 @@
     backupFileExtension = "backup";
   };
   hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
+    enable = true;                                 # turn on the NixOS OpenGL wrapper system
+    # driSupport = true;                             # <— make sure 64-bit DRI is enabled
+    enable32Bit = true;                        # only if you need 32-bit OpenGL (e.g. Steam/WINE)
     extraPackages = with pkgs; [
-      nvidia-vaapi-driver
-      libvdpau-va-gl
-    ];
-    extraPackages32 = with pkgs.pkgsi686Linux; [
-      libvdpau-va-gl
+      config.boot.kernelPackages.nvidia_x11         # NVIDIA’s libGL, libGLX, etc., for your running kernel
     ];
   };
   hardware.nvidia = {
@@ -348,18 +345,10 @@
     papirus-icon-theme  # Add Papirus icon theme
     gtk3  # Add GTK3 for icon support
     pulseaudio  # Add pulseaudio for pactl command
-    # Add OpenGL-related packages
-    libglvnd
     btop-cuda
-    glfw
-    xorg.libX11
-    xorg.libXext
-    xorg.libXrender
-    xorg.libXi
-    xorg.libXcursor
-    xorg.libXfixes
-    xorg.libXrandr
-    xorg.libXinerama
+    mesa-demos  
+    nvidia-vaapi-driver
+    libvdpau-va-gl
   ];
 
   # Add environment variables for OpenGL
