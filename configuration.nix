@@ -283,6 +283,7 @@
       '';
     })
     tmux
+    gdb
     vscode
     prismlauncher
     cups-printers
@@ -333,7 +334,6 @@
        withVencord = true;
      })       
     rsync
-    texlive.combined.scheme-full
     asymptote
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
