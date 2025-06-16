@@ -127,33 +127,48 @@
 
   # Configure keymap in X11
   services.xserver = {
-    videoDrivers = ["nvidia"];
     enable = true;
-    displayManager = {
-      lightdm = {
-        enable = true;
-      };
-    };
+    videoDrivers = ["nvidia"];
+    displayManager.lightdm.enable = true;
     windowManager.i3.enable = true;
     xkb.layout = "us";
     xkb.variant = "";
-    # Add NVIDIA-specific X server configuration
-    config = ''
-      Section "Device"
-        Identifier "nvidia"
-        Driver "nvidia"
-        Option "AllowIndirectGLXProtocol" "off"
-        Option "TripleBuffer" "true"
-        Option "UseEvents" "true"
-        Option "AllowFlipping" "true"
-        Option "UseEdidFreq" "true"
-        Option "RegistryDwords" "EnableBrightnessControl=1"
-        Option "SidebandSocketPath" "/run/nvidia-xdriver"
-      EndSection
-    '';
   };
   services.displayManager = {
     defaultSession = "none+i3";
+  };
+  hardware.graphics = {
+    enable = true;                                 # turn on the NixOS OpenGL wrapper system
+  };
+  hardware.nvidia = {
+
+    # Modesetting is required.
+    modesetting.enable = true;
+
+    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
+    # Enable this if you have graphical corruption issues or application crashes after waking
+    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
+    # of just the bare essentials.
+    powerManagement.enable = false;
+
+    # Fine-grained power management. Turns off GPU when not in use.
+    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
+    powerManagement.finegrained = false;
+
+    # Use the NVidia open source kernel module (not to be confused with the
+    # independent third-party "nouveau" open source driver).
+    # Support is limited to the Turing and later architectures. Full list of 
+    # supported GPUs is at: 
+    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
+    # Only available from driver 515.43.04+
+    open = false;
+
+    # Enable the Nvidia settings menu,
+	# accessible via `nvidia-settings`.
+    nvidiaSettings = true;
+
+    # Optionally, you may need to select the appropriate driver version for your specific GPU.
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
   # Define a user account. Don't forget to set a password with 'passwd'.
   users.groups.git = {};
@@ -207,35 +222,7 @@
     useGlobalPkgs = false;  # Changed to false to allow nixpkgs configuration
     backupFileExtension = "backup";
   };
-  hardware.graphics = {
-    enable = true;                                 # turn on the NixOS OpenGL wrapper system
-    # driSupport = true;                             # <— make sure 64-bit DRI is enabled
-    enable32Bit = true;                        # only if you need 32-bit OpenGL (e.g. Steam/WINE)
-    extraPackages = with pkgs; [
-      config.boot.kernelPackages.nvidia_x11         # NVIDIA’s libGL, libGLX, etc., for your running kernel
-    ];
-  };
-  hardware.nvidia = {
-    # Modesetting is required.
-    modesetting.enable = true;
-
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
-
-    # Use the NVidia open source kernel module
-    open = false;
-
-    # Enable the Nvidia settings menu
-    nvidiaSettings = true;
-
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-
-    # Add these new settings
-    forceFullCompositionPipeline = true;
-    nvidiaPersistenced = true;
-  };
+  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -346,9 +333,7 @@
     gtk3  # Add GTK3 for icon support
     pulseaudio  # Add pulseaudio for pactl command
     btop-cuda
-    mesa-demos  
-    nvidia-vaapi-driver
-    libvdpau-va-gl
+    glxinfo
   ];
 
   # Add environment variables for OpenGL
