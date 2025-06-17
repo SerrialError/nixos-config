@@ -222,7 +222,6 @@
     useGlobalPkgs = false;  # Changed to false to allow nixpkgs configuration
     backupFileExtension = "backup";
   };
-  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -287,7 +286,6 @@
     pavucontrol
     wineWowPackages.stable
     dconf
-    python3Full
     paraview
     mpi
     curlFull
@@ -298,18 +296,15 @@
     flameshot
     flex
     gcc-arm-embedded
-    stdenv.cc.cc.lib
-    gnumake
-    cmake
+    hugo
     killall
+    go
     mpv
     obs-studio
-    python3Packages.pip
     lutris
     code-cursor
     heroic
     floorp
-    gcc
     sops
     clang
     age
