@@ -147,8 +147,18 @@ in {
   };
 
   # Python plotting library configuration
-  programs.matplotlib = {
-    enable = true;
+  programs.thunderbird = {
+    enable = true;    
+    settings = {
+      # Example: turn off the welcome page
+      "browser.startup.homepage" = "about:blank";
+      # example: enable GPG integration
+      "mail.openpgp.enable" = true;
+    };
+    # If you want multiple profiles, you can define them here:
+    profiles = {
+      default = { isDefault = true; };
+    };
   };
 
   # Git configuration
@@ -157,26 +167,6 @@ in {
     userName  = "Serrial Error";
     userEmail = "serrialerror@outlook.com";
   };
-
-  # Required packages
-  home.packages = with pkgs; [
-    # Development tools
-    nil       # Nix language server
-    nodePackages.typescript-language-server
-    nodePackages.vscode-langservers-extracted
-    rust-analyzer
-    lua-language-server
-    python3Packages.python-lsp-server
-    clang-tools
-    gopls
-    haskell-language-server
-    texlab
-    zls
-
-    # System utilities
-    protonup
-    feh  # For wallpaper management
-  ];
 
   # Rofi configuration
   programs.rofi = {
