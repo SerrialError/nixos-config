@@ -277,7 +277,6 @@
     obsidian 
     unzip
     docker-compose
-    geoclue2
     lxappearance
     openrocket
     libsForQt5.qt5.qtquickcontrols2   
@@ -316,7 +315,6 @@
        withVencord = true;
      })       
     rsync
-    asymptote
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     mangohud
@@ -330,14 +328,6 @@
     btop-cuda
     glxinfo
   ];
-
-  # Add environment variables for OpenGL
-  environment.variables = {
-    LIBVA_DRIVER_NAME = "nvidia";
-    GBM_BACKEND = "nvidia-drm";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-    __EGL_VENDOR_LIBRARY_FILENAMES = "/run/opengl-driver/share/glvnd/egl_vendor.d/10_nvidia.json";
-  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
