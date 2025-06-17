@@ -219,7 +219,6 @@
     users = {
       "connor" = import ./home.nix;
     };
-    useGlobalPkgs = false;  # Changed to false to allow nixpkgs configuration
     backupFileExtension = "backup";
   };
 
