@@ -78,6 +78,7 @@
     configPackages = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
+
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";
 
@@ -214,10 +215,19 @@
     description = "connor-pc";
     extraGroups = [ "networkmanager" "wheel" "docker" ];
   };
+  users.users.nixosvmtest = {
+    isNormalUser = true;
+    createHome = true;
+    description = "vm test";
+    initialPassword = "test";
+    shell = pkgs.bashInteractive;
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
+  };
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users = {
       "connor" = import ./home.nix;
+      "nixosvmtest" = import ./home.nix;
     };
     backupFileExtension = "backup";
   };
@@ -300,6 +310,7 @@
     killall
     go
     mpv
+    nitch
     obs-studio
     lutris
     code-cursor
@@ -326,6 +337,8 @@
     papirus-icon-theme  # Add Papirus icon theme
     gtk3  # Add GTK3 for icon support
     pulseaudio  # Add pulseaudio for pactl command
+    qemu
+    quickemu
     btop-cuda
     glxinfo
   ];
@@ -384,8 +397,8 @@
 
   # Open ports in the firewall.
   networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 ];
-  networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 ];
+  networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 22000 ];
+  networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 22000 21027 ];
   # Or disable the firewall altogether.
 
   # This value determines the NixOS release from which the default

@@ -26,8 +26,8 @@ in {
   };
 
   # Home Manager configuration
-  home.username = "connor";
-  home.homeDirectory = "/home/connor";
+  # home.username = "connor";
+  # home.homeDirectory = "/home/connor";
   home.stateVersion = "25.05";
 
   # Neovim configuration
@@ -350,6 +350,32 @@ in {
     enable = true;
   };
 
+  services.syncthing = {
+    enable = true;
+    settings = {    
+      devices = {
+        "laptop" = { id = "QSDBXQP-LWMP27Y-2R3UPXB-FJKCFCL-BYFXURB-JAJU4W3-IWZKTTJ-HURJ5QC"; };
+      };
+      folders = {
+        "Documents" = {
+          path = "/home/connor/Documents";
+	  devices = [ "laptop" ];
+        };
+        "Pictures" = {
+          path = "/home/connor/Pictures";
+	  devices = [ "laptop" ];
+        };
+        "Videos" = {
+          path = "/home/connor/Videos";
+	  devices = [ "laptop" ];
+        };
+        "Music" = {
+          path = "/home/connor/Music";
+	  devices = [ "laptop" ];
+        };
+      };
+    };
+  };
   # Create Rofi launcher script
   home.file.".local/bin/rofi-launcher.sh" = {
     text = ''
