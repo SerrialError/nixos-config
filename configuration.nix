@@ -66,7 +66,12 @@
     powerOnBoot = true;
   };
   services.blueman.enable = true;
-
+  services.udisks2.enable = true;
+  security.polkit.enable = true;
+  security.polkit.debug = true;
+  security.polkit.adminIdentities = [
+    "unix-group:wheel"
+  ];
   # Enable Flatpak
   services.flatpak.enable = true;
   xdg.portal = {
@@ -203,6 +208,15 @@
       chmod 600 /var/lib/git-server/.ssh/authorized_keys
     '';
   };
+  systemd.user.services."polkit-gnome-authentication-agent-1" = {
+    description = "PolicyKit Authentication Agent";
+    after = [ "graphical-session.target" ];
+    wants = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+      Restart = "on-failure";
+    };
+  };
   # Create the sideband socket directory with proper permissions
   systemd.tmpfiles.rules = [
     "d /run/nvidia-xdriver 0755 root root -"
@@ -279,10 +293,12 @@
     })
     tmux
     gdb
+    polkit_gnome
     vscode
     prismlauncher
     cups-printers
     kitty
+    libnotify
     feh 
     protonup
     obsidian 
@@ -392,6 +408,7 @@
       };
     };
   };
+  services.dbus.enable = true;
   services.gvfs.enable = true; # Mount, trash, and other functionalities
   services.tumbler.enable = true; # Thumbnail support for images
 

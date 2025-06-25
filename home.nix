@@ -376,6 +376,7 @@ in {
       };
     };
   };
+  services.dunst.enable = true;
   # Create Rofi launcher script
   home.file.".local/bin/rofi-launcher.sh" = {
     text = ''
