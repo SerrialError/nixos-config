@@ -14,7 +14,7 @@
     ];
   # Add additional storage mounts
   fileSystems."/mnt/storage" = {
-    device = "/dev/sda1";
+    device = "/dev/disk/by-label/storage";
     fsType = "ext4";
     options = [ "noatime" "nodiratime" "discard" ];
   };
@@ -174,7 +174,7 @@
     # nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    # package = config.boot.kernelPackages.nvidiaPackages.stable;
+    # package = config.boot.kernelPackages.nvidiaPackages.latest;
   };
   # Define a user account. Don't forget to set a password with 'passwd'.
   users.groups.git = {};
@@ -217,12 +217,6 @@
       Restart = "on-failure";
     };
   };
-  # Create the sideband socket directory with proper permissions
-  systemd.tmpfiles.rules = [
-    "d /run/nvidia-xdriver 0755 root root -"
-    "d /mnt/nvme 0755 connor users -"
-    "d /mnt/storage  0755 connor users -"
-  ];
 
   users.users.connor = {
     isNormalUser = true;
