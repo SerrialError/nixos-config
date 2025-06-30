@@ -42,11 +42,9 @@
   nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/sdb";
-  boot.loader.grub.useOSProber = true;
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
   networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
@@ -184,30 +182,11 @@
     home = "/var/lib/git-server";
     createHome = true;
     shell = "${pkgs.git}/bin/git-shell";
-    # The authorized keys will be managed by the systemd service
+    openssh.authorizedKeys.keyFiles = [
+      config.sops.secrets.ssh-auth-keys.path
+    ];
   };
 
-  # Create a systemd service to set up the authorized keys
-  systemd.services.git-authorized-keys = {
-    description = "Set up Git user's authorized keys";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "sops-nix.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      User = "git";
-      Group = "git";
-    };
-    script = ''
-      # Create .ssh directory if it doesn't exist
-      mkdir -p /var/lib/git-server/.ssh
-      chmod 700 /var/lib/git-server/.ssh
-
-      # Copy the authorized keys file
-      cp ${config.sops.secrets.ssh-auth-keys.path} /var/lib/git-server/.ssh/authorized_keys
-      chmod 600 /var/lib/git-server/.ssh/authorized_keys
-    '';
-  };
   systemd.user.services."polkit-gnome-authentication-agent-1" = {
     description = "PolicyKit Authentication Agent";
     after = [ "graphical-session.target" ];
@@ -222,6 +201,9 @@
     isNormalUser = true;
     description = "connor-pc";
     extraGroups = [ "networkmanager" "wheel" "docker" ];
+    openssh.authorizedKeys.keyFiles = [
+      config.sops.secrets.ssh-auth-keys.path
+    ];
   };
   users.users.nixosvmtest = {
     isNormalUser = true;
