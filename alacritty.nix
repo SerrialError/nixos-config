@@ -10,10 +10,6 @@
     window = {
       decorations = "none";
       dynamic_title = true;
-      gtk_theme_variant = "dark";
-    };
-    graphics = {
-      backend = "glx";
     };
     colors = with config.colorScheme.palette; {
       bright = {

@@ -1,4 +1,4 @@
-{ config, inputs, pkgs, lib, ... }:
+{config, inputs, pkgs, lib, ... }:
 
 let
   inherit (builtins) readFile;
@@ -10,6 +10,7 @@ let
 in {
   imports = [
     inputs.nix-colors.homeManagerModules.default
+    inputs.nvf.homeManagerModules.default
     (import ./alacritty.nix)
     (import ./wm/i3.nix)
     (import ./wm/polybar.nix)
@@ -29,100 +30,13 @@ in {
   # home.username = "connor";
   # home.homeDirectory = "/home/connor";
   home.stateVersion = "25.05";
-
-  # Neovim configuration
-  programs.neovim = {
-    enable = true;
-    package = pkgs.neovim-unwrapped;
-    viAlias = true;
-    vimAlias = true;
-    withNodeJs = true;
-    withPython3 = true;
-    extraPython3Packages = ps: with ps; [
-      pynvim
-      black
-      isort
-      flake8
-    ];
-    extraPackages = with pkgs; [
-      # Clipboard support
-      xclip
-      wl-clipboard
-    ];
-    extraLuaConfig = ''
-      -- Clipboard settings
-      vim.opt.clipboard = 'unnamedplus'
-      vim.keymap.set('n', 'y', '"+y')
-      vim.keymap.set('v', 'y', '"+y')
-      vim.keymap.set('n', 'Y', '"+Y')
-      vim.keymap.set('n', 'p', '"+p')
-      vim.keymap.set('v', 'p', '"+p')
-      vim.keymap.set('n', 'P', '"+P')
-    '';
-    plugins = with pkgs.vimPlugins; [
-      # LSP and Completion
-      nvim-cmp
-      cmp-nvim-lsp
-      cmp-buffer
-      cmp-path
-      cmp-cmdline
-      lspkind-nvim
-      nvim-lspconfig
-      luasnip
-      friendly-snippets
-      neodev-nvim
-      
-      # Telescope
-      telescope-nvim
-      plenary-nvim
-      telescope-fzf-native-nvim
-      
-      # Treesitter
-      nvim-treesitter
-      nvim-treesitter-textobjects
-      
-      # UI
-      lualine-nvim
-      nvim-web-devicons
-      bufferline-nvim
-      nvim-colorizer-lua
-      
-      # Git
-      gitsigns-nvim
-      
-      # Utilities
-      nvim-autopairs
-      nvim-ts-context-commentstring
-      comment-nvim
-      vim-surround
-      vim-repeat
-      
-      # Themes
-      onedark-nvim
-      gruvbox-nvim
-    ];
-  };
-
-  # Link your Neovim configuration
-  home.file.".config/nvim" = {
-    source = ./nvim;
-    recursive = true;
-  };
-
-  # Custom vim plugins overlay
-  nixpkgs = {
-    overlays = [
-      (final: prev: {
-        vimPlugins = prev.vimPlugins // {
-          own-onedark-nvim = prev.vimUtils.buildVimPlugin {
-            pname = "own-onedark-nvim";
-            version = "1.0.0";
-            src = ./nvim/onedark.nvim;
-          };
-        };
-      })
-    ];
-  }; 
+  home.file."bin/element".text = ''
+	#!/usr/bin/env bash
+  	eval $(gnome-keyring-daemon --start --components=secrets)
+  	export GNOME_KEYRING_CONTROL
+  	export DBUS_SESSION_BUS_ADDRESS
+  	/nix/store/...-element-desktop/bin/element-desktop "$@"
+  '';
 
   # X session configuration
   xsession.enable = true;
@@ -144,69 +58,144 @@ in {
   # PDF viewer configuration
   programs.zathura = {
     enable = true;
-  };
+		extraConfig = "set selection-clipboard clipboard";
+		options = {
+			# UI Colors
+			notification-bg = "#282a2e";
+			notification-fg = "#c5c8c6";
+			completion-bg = "#282a2e";
+			completion-fg = "#c5c8c6";
 
-  # Python plotting library configuration
-  programs.thunderbird = {
-    enable = true;    
-    settings = {
-      # Example: turn off the welcome page
-      "browser.startup.homepage" = "about:blank";
-      # example: enable GPG integration
-      "mail.openpgp.enable" = true;
-    };
-    # If you want multiple profiles, you can define them here:
-    profiles = {
-      default = { isDefault = true; };
-    };
-  };
+			# PDF Recolor (Dark Mode)
+			recolor = "true";
+			recolor-lightcolor = "#000000"; # Page background
+			recolor-darkcolor = "#c5c8c6";  # Text color
 
-  # Git configuration
-  programs.git = {
-    enable = true;
-    userName  = "Serrial Error";
-    userEmail = "serrialerror@outlook.com";
-  };
+			# General
+			default-bg = "#1d1f21";
+			statusbar-fg = "#c5c8c6";
+		};
+	};
 
-  # Rofi configuration
-  programs.rofi = {
-    enable = true;
-    theme = "gruvbox-dark";
-    configPath = ".config/rofi/config.rasi";
-    extraConfig = {
-      modi = "drun,run,window";
-      show-icons = true;
-      icon-theme = "Papirus";
-      font = "Fira Code 12";
-      width = 50;
-      lines = 10;
-      padding = 20;
-      bw = 2;
-      separator-style = "none";
-      hide-scrollbar = true;
-      fullscreen = false;
-      location = 0;
-      fixed-num-lines = true;
-      terminal = "alacritty";
-    };
-  };
+	# Python plotting library configuration
+	programs.thunderbird = {
+		enable = true;    
+		settings = {
+			# Example: turn off the welcome page
+			"browser.startup.homepage" = "about:blank";
+			# example: enable GPG integration
+			"mail.openpgp.enable" = true;
+		};
+		# If you want multiple profiles, you can define them here:
+		profiles = {
+			default = { isDefault = true; };
+		};
+	};
 
-  # Create Rofi theme directory and theme file
-  home.file.".config/rofi/themes/gruvbox-dark.rasi" = {
-    text = ''
-      * {
-          bg: #282828;
-          bg-alt: #3c3836;
-          fg: #ebdbb2;
-          fg-alt: #a89984;
-          
-          border: 0;
-          margin: 0;
-          padding: 0;
-          spacing: 0;
-      }
+	# Git configuration
+	programs.git = {
+		enable = true;
+		userName  = "Serrial Error";
+		userEmail = "serrialerror@outlook.com";
+	};
 
-      window {
+	# Rofi configuration
+	programs.rofi = {
+		enable = true;
+		theme = "gruvbox-dark";
+		configPath = ".config/rofi/config.rasi";
+		extraConfig = {
+			modi = "drun,run,window";
+			show-icons = true;
+			icon-theme = "Papirus";
+			font = "Fira Code 12";
+			width = 50;
+			lines = 10;
+			padding = 20;
+			bw = 2;
+			separator-style = "none";
+			hide-scrollbar = true;
+			fullscreen = false;
+			location = 0;
+			fixed-num-lines = true;
+			terminal = "alacritty";
+		};
+	};
+	programs.neovim = {
+		enable = true;
+		plugins = with pkgs.vimPlugins; [
+			nvim-treesitter.withAllGrammars
+		];
+	};
+
+	programs.nvf = {
+		enable = true;
+		settings = {
+			vim = {
+				# Avoid letting the module call `pkgs.vimPlugins.nvim-treesitter.parsers`
+				# (some nixpkgs revisions don't expose `parsers`). Setting grammars=[]
+				# overrides the module default and prevents the missing-attribute error.
+				treesitter = {
+					grammars = [];  # empty because Nix already provides parsers via withAllGrammars
+				};
+
+				theme = { enable = true; name = "gruvbox"; style = "dark"; };
+				luaConfigRC.myIndentation = ''
+					vim.opt.expandtab = false
+					vim.opt.shiftwidth = 4
+					vim.opt.tabstop = 4
+				'';
+				clipboard.enable = true;
+				clipboard.providers.xclip.enable = true;
+				clipboard.registers = "unnamedplus";
+				statusline.lualine.enable = true;
+				telescope.enable = true;
+				autocomplete.nvim-cmp.enable = true;
+				languages = {
+					enableTreesitter = true;
+					nix.enable = true;
+					clang.enable = true;
+					ts.enable = true;
+					rust.enable = true;
+				};
+				lsp = {
+					enable = true;
+					servers = {
+        				clangd = {
+          					enable = true;
+          					# optional but recommended
+          					extraArgs = [
+            					"--background-index"
+								"--query-driver=/nix/store/c353gqsmf8mvg72vivm9fb2dv210wnkm-gcc-arm-embedded-14.2.rel1/bin/arm-none-eabi-*"
+          					];
+        				};
+      				};
+				};
+			};
+		};
+	};
+
+	# programs.claude-code = {
+		# enable = true;	
+	# };
+
+	programs.vinegar.enable = true;
+	# Create Rofi theme directory and theme file
+	home.file.".config/rofi/themes/gruvbox-dark.rasi" = {
+		text = ''
+	  * {
+		  bg: #282828;
+		  bg-alt: #3c3836;
+		  fg: #ebdbb2;
+		  fg-alt: #a89984;
+
+		  border: 0;
+		  margin: 0;
+		  padding: 0;
+		  spacing: 0;
+	  }
+
+	  window {
           width: 50%;
           background-color: @bg;
       }
@@ -314,17 +303,6 @@ in {
   xsession.initExtra = ''
     $HOME/.local/bin/set-random-wallpaper.sh
   '';
-
-  # Steam configuration
-  home.file.".local/share/Steam/steamapps/common" = {
-    source = config.lib.file.mkOutOfStoreSymlink "/mnt/steam/steamapps/common";
-    recursive = true;
-  };
-
-  home.file.".steam/root/compatibilitytools.d" = {
-    source = config.lib.file.mkOutOfStoreSymlink "/mnt/steam/compatibilitytools.d";
-    recursive = true;
-  };
 
   # Environment variables
   home.sessionVariables = {

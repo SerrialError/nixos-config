@@ -5,7 +5,7 @@ let
 in {
   xsession.windowManager.i3 = {
     enable = true;
-    package = pkgs.i3-gaps;
+    package = pkgs.i3-gaps;  
     config = {
       modifier = "Mod4";
       terminal = "alacritty";
@@ -37,7 +37,8 @@ in {
         "${modifier}+Shift+p" = "exec rofi -modi drun -show drun -dump-xresources";
         "${modifier}+Shift+d" = "exec discord";
         "${modifier}+Shift+f" = "exec floorp";
-        "${modifier}+Shift+n" = "exec $HOME/.local/bin/set-random-wallpaper.sh";
+        "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/set-random-wallpaper.sh";
+        "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/picom-grayscale-toggle.sh";
       };
 
       # Startup applications
@@ -46,7 +47,6 @@ in {
         { command = "sleep 2 && blueman-applet"; }
         { command = "flameshot"; }
         { command = "picom --experimental-backends"; }
-        { command = "lxappearance"; }  # Apply GTK theme
       ];
 
       colors = {
@@ -93,6 +93,8 @@ in {
   # Picom compositor configuration
   services.picom = {
     enable = true;
+	backend = "glx";
+	vSync = true;
     package = pkgs.picom;
     fade = true;
     fadeDelta = 5;

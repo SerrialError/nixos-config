@@ -9,7 +9,6 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
-      inputs.nix-minecraft.nixosModules.minecraft-servers
       inputs.sops-nix.nixosModules.sops
     ];
   # Add additional storage mounts
@@ -39,16 +38,13 @@
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
-
+  nixpkgs.config.permittedInsecurePackages = [
+	"electron-36.9.5"
+  ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   networking.hostName = "nixos"; # Define your hostname.
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
   # Enable networking
   networking.networkmanager.enable = true;
   virtualisation.docker.enable = true;
@@ -63,6 +59,8 @@
     enable = true;
     powerOnBoot = true;
   };
+
+  hardware.xpadneo.enable = true;
   services.blueman.enable = true;
   services.udisks2.enable = true;
   security.polkit.enable = true;
@@ -231,53 +229,26 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    # PROS CLI
-    (python3Packages.buildPythonPackage rec {
-      pname = "pros-cli";
-      version = "3.5.5";
-      doCheck = false;
-
-      nativeBuildInputs = with python3Packages; [
-        pip
-        setuptools
-        wheel
-      ];
-      propagatedBuildInputs = with python3Packages; [
-        jsonpickle
-        pyserial
-        tabulate
-        cobs
-        click
-        rich-click
-        cachetools
-        requests-futures
-        semantic-version
-        colorama
-        pyzmq
-        sentry-sdk
-        pypng
-      ];
-      src = fetchFromGitHub {
-        owner = "purduesigbots";
-        repo = pname;
-        rev = "${version}";
-        sha256 = "sha256-Lw3NJaFmJFt0g3N+jgmGLG5AMeMB4Tqk3d4mPPWvC/c=";
-      };
-      postInstall = ''
-        echo "${version}" > $out/lib/python3.12/site-packages/version
-      '';
-    })
-    tmux
-    gdb
+	obs-studio
+	claude-monitor
+	heroic
+	fastfetch
+	tmux
+	gdb
     polkit_gnome
-    vscode
+    gimp
+	vscode
     prismlauncher
     cups-printers
     kitty
     libnotify
     feh 
+    mupdf
     protonup
-    obsidian 
+    obsidian
+	libsecret
+	gnome-keyring
+    libsForQt5.okular
     unzip
     docker-compose
     lxappearance
@@ -287,7 +258,9 @@
     libsForQt5.qt5.qtgraphicaleffects
     pavucontrol
     wineWowPackages.stable
-    dconf
+    winetricks
+	element-desktop
+	dconf
     paraview
     mpi
     curlFull
@@ -303,10 +276,8 @@
     go
     mpv
     nitch
-    obs-studio
     lutris
     code-cursor
-    heroic
     floorp
     sops
     clang
@@ -345,20 +316,21 @@
       thunar-volman
     ];
   };
+  programs.java.enable = true;
+  programs.java.package = pkgs.jdk17; # or pkgs.oraclejdk18
   programs.steam.enable = true;
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
   };      
+  programs.seahorse.enable = true;
+
   # Ensure Bash is available as a shell
   environment.shells = [ pkgs.bashInteractive ];
-  # Configure bash aliases and interactive shell settings
-  programs.bash = {
-    interactiveShellInit = ''
-      alias pros-devshell="nix develop .#default"
-    '';
-  };
+  
   # List services that you want to enable:
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.login.enableGnomeKeyring = true;
 
   # Enable the OpenSSH daemon.
   services.openssh = {
@@ -372,26 +344,14 @@
         X11Forwarding no
     '';
   };
-  services.minecraft-servers = {
-    enable = false;
-    eula = true;
-    dataDir = "/var/lib/mcservers";
-
-    servers = {
-      test-server = {
-        enable = true;
-        package = pkgs.paperServers.paper-1_21_3;
-      };
-    };
-  };
   services.dbus.enable = true;
   services.gvfs.enable = true; # Mount, trash, and other functionalities
   services.tumbler.enable = true; # Thumbnail support for images
 
   # Open ports in the firewall.
-  networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 22000 ];
-  networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 22000 21027 ];
+  networking.firewall.enable = false;
+  # networking.firewall.allowedTCPPorts = [ 22 25565 8080 8443 22000 ];
+  # networking.firewall.allowedUDPPorts = [ 22 25565 8080 8443 22000 21027 ];
   # Or disable the firewall altogether.
 
   # This value determines the NixOS release from which the default
