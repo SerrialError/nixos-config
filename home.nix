@@ -25,11 +25,11 @@ in {
   nix = {
     settings.experimental-features = [ "nix-command" "flakes" ];
   };
-
+  nixpkgs.config.allowUnfree = true;
   # Home Manager configuration
   # home.username = "connor";
   # home.homeDirectory = "/home/connor";
-  home.stateVersion = "25.05";
+  home.stateVersion = "25.11";
   home.file."bin/element".text = ''
 	#!/usr/bin/env bash
   	eval $(gnome-keyring-daemon --start --components=secrets)
@@ -95,8 +95,12 @@ in {
 	# Git configuration
 	programs.git = {
 		enable = true;
-		userName  = "Serrial Error";
-		userEmail = "serrialerror@outlook.com";
+		settings = {
+			user = {
+				name  = "Serrial Error";
+				email = "serrialerror@outlook.com";
+			};
+		};
 	};
 
 	# Rofi configuration
@@ -175,9 +179,16 @@ in {
 		};
 	};
 
-	# programs.claude-code = {
-		# enable = true;	
-	# };
+	programs.claude-code = {
+		enable = true;	
+	};
+	programs.aichat = {
+		enable = true;
+	};
+	programs.gemini-cli = {
+		enable = true;
+	};
+	# home.packages = [ pkgs.claude-code ];
 
 	programs.vinegar.enable = true;
 	# Create Rofi theme directory and theme file

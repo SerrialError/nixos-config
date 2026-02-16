@@ -139,6 +139,10 @@
   services.displayManager = {
     defaultSession = "none+i3";
   };
+  services.ollama = {
+	enable = true;
+	acceleration = "cuda";
+  };
   # hardware.graphics = {
     # enable = true;                                 # turn on the NixOS OpenGL wrapper system
   # };
@@ -244,11 +248,10 @@
     libnotify
     feh 
     mupdf
-    protonup
+    protonup-ng
     obsidian
 	libsecret
 	gnome-keyring
-    libsForQt5.okular
     unzip
     docker-compose
     lxappearance
@@ -278,12 +281,12 @@
     nitch
     lutris
     code-cursor
-    floorp
+    floorp-bin
     sops
     clang
     age
     ssh-to-age
-    bitwarden
+    bitwarden-desktop
     (pkgs.discord.override {
       # remove any overrides that you don't want
        withOpenASAR = true;
@@ -303,7 +306,7 @@
     qemu
     quickemu
     btop-cuda
-    glxinfo
+	mesa-demos    
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
