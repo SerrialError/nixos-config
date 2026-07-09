@@ -25,7 +25,8 @@ in {
   nix = {
     settings.experimental-features = [ "nix-command" "flakes" ];
   };
-  nixpkgs.config.allowUnfree = true;
+  # nixpkgs config (allowUnfree, insecure permits, overlays) comes from the
+  # system via home-manager.useGlobalPkgs in configuration.nix
   # Home Manager configuration
   # home.username = "connor";
   # home.homeDirectory = "/home/connor";
@@ -35,7 +36,7 @@ in {
   	eval $(gnome-keyring-daemon --start --components=secrets)
   	export GNOME_KEYRING_CONTROL
   	export DBUS_SESSION_BUS_ADDRESS
-  	/nix/store/...-element-desktop/bin/element-desktop "$@"
+  	${pkgs.element-desktop}/bin/element-desktop "$@"
   '';
 
   # X session configuration
@@ -54,7 +55,19 @@ in {
       videos = "$HOME/Videos";
     };
   };
-
+  
+  programs.fish = {
+    enable = true;
+    shellAbbrs = {
+      # rebuild (test only, no activation)
+      nrb = "nixos-rebuild build --flake /home/connor/git/nixos-config#default";
+      # rebuild and switch to the new generation
+      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default";
+    };
+  };
+  programs.codex = {
+    enable = true;
+  };
   # PDF viewer configuration
   programs.zathura = {
     enable = true;
@@ -125,66 +138,130 @@ in {
 			terminal = "alacritty";
 		};
 	};
-	programs.neovim = {
-		enable = true;
-		plugins = with pkgs.vimPlugins; [
-			nvim-treesitter.withAllGrammars
-		];
-	};
-
-	programs.nvf = {
-		enable = true;
-		settings = {
-			vim = {
-				# Avoid letting the module call `pkgs.vimPlugins.nvim-treesitter.parsers`
-				# (some nixpkgs revisions don't expose `parsers`). Setting grammars=[]
-				# overrides the module default and prevents the missing-attribute error.
-				treesitter = {
-					grammars = [];  # empty because Nix already provides parsers via withAllGrammars
-				};
-
-				theme = { enable = true; name = "gruvbox"; style = "dark"; };
-				luaConfigRC.myIndentation = ''
-					vim.opt.expandtab = false
-					vim.opt.shiftwidth = 4
-					vim.opt.tabstop = 4
-				'';
-				clipboard.enable = true;
-				clipboard.providers.xclip.enable = true;
-				clipboard.registers = "unnamedplus";
-				statusline.lualine.enable = true;
-				telescope.enable = true;
-				autocomplete.nvim-cmp.enable = true;
-				languages = {
-					enableTreesitter = true;
-					nix.enable = true;
-					clang.enable = true;
-					ts.enable = true;
-					rust.enable = true;
-				};
-				lsp = {
-					enable = true;
-					servers = {
-        				clangd = {
-          					enable = true;
-          					# optional but recommended
-          					extraArgs = [
-            					"--background-index"
-								"--query-driver=/nix/store/c353gqsmf8mvg72vivm9fb2dv210wnkm-gcc-arm-embedded-14.2.rel1/bin/arm-none-eabi-*"
-          					];
-        				};
-      				};
+programs.nvf = {
+	enable = true;
+	settings = {
+		vim = {
+			
+			# luaConfigRC.codecompanion = ''
+				# -- Keybindings
+				# vim.keymap.set("n", "<leader>cc", "<cmd>CodeCompanionChat<cr>", { desc = "Open AI chat" })
+				# vim.keymap.set("v", "<leader>cc", "<cmd>CodeCompanionChat<cr>", { desc = "Chat with selection" })
+				# vim.keymap.set("n", "<leader>ca", "<cmd>CodeCompanionActions<cr>", { desc = "AI actions menu" })
+			# '';
+			
+			treesitter = {
+				grammars = [];
+			};
+			# WORKAROUND for nvf rev 63d8fc82d6: its vim.maps -> vim.keymaps
+			# migration shim reads every legacy category unconditionally, and the
+			# legacy options have no defaults, so evaluation fails unless ALL of
+			# them are defined. Delete this whole block after `nix flake update nvf`.
+			maps = {
+				normal = {};
+				insert = {};
+				select = {};
+				visual = {};
+				terminal = {};
+				command = {};
+				visualOnly = {};
+				operator = {};
+				insertCommand = {};
+				lang = {};
+				normalVisualOp = {};
+			};
+			theme = { enable = true; name = "gruvbox"; style = "dark"; };
+			/* luaConfigRC.myIndentation = ''
+				vim.opt.expandtab = false
+				vim.opt.shiftwidth = 4
+				vim.opt.tabstop = 4
+			''; */
+			clipboard.enable = true;
+			clipboard.providers.xclip.enable = true;
+			clipboard.registers = "unnamedplus";
+			statusline.lualine.enable = true;
+			telescope.enable = true;
+			autocomplete.nvim-cmp.enable = true;
+			languages = {
+				enableTreesitter = true;
+				nix.enable = true;
+				clang.enable = true;
+				typescript.enable = true;
+				rust.enable = true;
+			};
+			lsp = {
+				enable = true;
+				servers = {
+					clangd = {
+						enable = true;
+					};
 				};
 			};
 		};
 	};
-
+};
 	programs.claude-code = {
 		enable = true;	
 	};
-	programs.aichat = {
-		enable = true;
-	};
+programs.aichat = {
+  enable = true;
+  
+  settings = {
+    model = "ollama:qwen2.5-coder:14b";
+    rag_embedding_model = "nomic-embed-text:latest";
+    rag_top_k = 5;
+    temperature = 0.5;
+    stream = true;
+    save = true;
+    highlight = true;
+    
+    clients = [
+      {
+        # Order matters! type and name must come first
+        type = "openai-compatible";
+        name = "ollama";
+        api_base = "http://localhost:11434/v1";
+        models = [
+          {
+            name = "qwen2.5-coder:14b";
+            max_input_tokens = 131072;
+            supports_function_calling = true;
+          }
+          {
+            name = "qwen2.5-coder:7b";
+            max_input_tokens = 131072;
+            supports_function_calling = true;
+          }
+          {
+            name = "nomic-embed-text:latest";
+            type = "embedding";
+            default_chunk_size = 1000;
+            max_batch_size = 50;
+          }
+        ];
+      }
+    ];
+  };
+  
+  agents = {
+    review = {
+      model = "ollama:qwen2.5-coder:14b";
+      temperature = 0.3;
+      instructions = "You are a code reviewer. Analyze code for bugs, performance issues, and best practices.";
+    };
+    coder = {
+      model = "ollama:qwen2.5-coder:14b";
+      temperature = 0.3;
+      use_tools = "fs";
+      instructions = "You are a coding assistant. Provide concise, practical solutions. Make sure to be detailed in your work.";
+    };
+    chat = {
+      model = "ollama:qwen2.5-coder:7b";
+      temperature = 0.7;
+      instructions = "You are a chatbot, a variety of questions will be asked. Be as detailed and thoughtful as possible in your answer. Listen to everything the user has to say, it is your friend.";
+    };
+  };
+};
 	programs.gemini-cli = {
 		enable = true;
 	};
@@ -320,7 +397,7 @@ in {
     EDITOR = "nvim";
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
     XDG_SESSION_TYPE = "x11";  # Ensure X11 clipboard is used
-    XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
+    XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:${config.home.homeDirectory}/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
   };
 
   # Create .profile file
@@ -330,7 +407,7 @@ in {
       export EDITOR="nvim"
       export STEAM_EXTRA_COMPAT_TOOLS_PATHS="$HOME/.steam/root/compatibilitytools.d"
       export XDG_SESSION_TYPE="x11"
-      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
+      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
     '';
   };
 
@@ -347,19 +424,19 @@ in {
       };
       folders = {
         "Documents" = {
-          path = "/home/connor/Documents";
+          path = "${config.home.homeDirectory}/Documents";
 	  devices = [ "laptop" ];
         };
         "Pictures" = {
-          path = "/home/connor/Pictures";
+          path = "${config.home.homeDirectory}/Pictures";
 	  devices = [ "laptop" ];
         };
         "Videos" = {
-          path = "/home/connor/Videos";
+          path = "${config.home.homeDirectory}/Videos";
 	  devices = [ "laptop" ];
         };
         "Music" = {
-          path = "/home/connor/Music";
+          path = "${config.home.homeDirectory}/Music";
 	  devices = [ "laptop" ];
         };
       };
@@ -370,7 +447,7 @@ in {
   home.file.".local/bin/rofi-launcher.sh" = {
     text = ''
       #!/usr/bin/env bash
-      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
+      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
       rofi -modi drun -show drun -dump-xresources
     '';
     executable = true;

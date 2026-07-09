@@ -1,0 +1,98 @@
+--- a/configuration.nix
++++ b/configuration.nix
+@@ -232,6 +232,8 @@
+     extraGroups = [ "networkmanager" "wheel" "docker" ];
+   };
+   home-manager = {
++    useGlobalPkgs = true;   # share the system nixpkgs (config + overlays) with HM
++    useUserPackages = true; # install HM packages via /etc/profiles (standard on NixOS)
+     extraSpecialArgs = { inherit inputs; };
+     users = {
+       "connor" = import ./home.nix;
+@@ -324,7 +326,6 @@
+     papirus-icon-theme  # Add Papirus icon theme
+     gtk3  # Add GTK3 for icon support
+     pulseaudio  # Add pulseaudio for pactl command
+-    qemu
+     quickemu
+     btop-cuda
+ 	mesa-demos    
+--- a/home.nix
++++ b/home.nix
+@@ -25,10 +25,8 @@
+   nix = {
+     settings.experimental-features = [ "nix-command" "flakes" ];
+   };
+-  nixpkgs.config.allowUnfree = true;
+-  # home-manager evaluates its own nixpkgs instance (useGlobalPkgs is not set),
+-  # so the system-level permit in configuration.nix does not apply here
+-  nixpkgs.config.permittedInsecurePackages = [ "electron-36.9.5" ];
++  # nixpkgs config (allowUnfree, insecure permits, overlays) comes from the
++  # system via home-manager.useGlobalPkgs in configuration.nix
+   # Home Manager configuration
+   # home.username = "connor";
+   # home.homeDirectory = "/home/connor";
+@@ -140,12 +138,6 @@
+ 			terminal = "alacritty";
+ 		};
+ 	};
+-	programs.neovim = {
+-		enable = true;
+-		plugins = with pkgs.vimPlugins; [
+-			nvim-treesitter.withAllGrammars
+-		];
+-	};
+ programs.nvf = {
+ 	enable = true;
+ 	settings = {
+@@ -388,7 +380,7 @@
+     EDITOR = "nvim";
+     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
+     XDG_SESSION_TYPE = "x11";  # Ensure X11 clipboard is used
+-    XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
++    XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:${config.home.homeDirectory}/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
+   };
+ 
+   # Create .profile file
+@@ -398,7 +390,7 @@
+       export EDITOR="nvim"
+       export STEAM_EXTRA_COMPAT_TOOLS_PATHS="$HOME/.steam/root/compatibilitytools.d"
+       export XDG_SESSION_TYPE="x11"
+-      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
++      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
+     '';
+   };
+ 
+@@ -415,19 +407,19 @@
+       };
+       folders = {
+         "Documents" = {
+-          path = "/home/connor/Documents";
++          path = "${config.home.homeDirectory}/Documents";
+ 	  devices = [ "laptop" ];
+         };
+         "Pictures" = {
+-          path = "/home/connor/Pictures";
++          path = "${config.home.homeDirectory}/Pictures";
+ 	  devices = [ "laptop" ];
+         };
+         "Videos" = {
+-          path = "/home/connor/Videos";
++          path = "${config.home.homeDirectory}/Videos";
+ 	  devices = [ "laptop" ];
+         };
+         "Music" = {
+-          path = "/home/connor/Music";
++          path = "${config.home.homeDirectory}/Music";
+ 	  devices = [ "laptop" ];
+         };
+       };
+@@ -438,7 +430,7 @@
+   home.file.".local/bin/rofi-launcher.sh" = {
+     text = ''
+       #!/usr/bin/env bash
+-      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/home/connor/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
++      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
+       rofi -modi drun -show drun -dump-xresources
+     '';
+     executable = true;

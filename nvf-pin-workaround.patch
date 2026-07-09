@@ -1,0 +1,26 @@
+--- a/home.nix
++++ b/home.nix
+@@ -153,6 +153,23 @@
+ 			treesitter = {
+ 				grammars = [];
+ 			};
++			# WORKAROUND for nvf rev 63d8fc82d6: its vim.maps -> vim.keymaps
++			# migration shim reads every legacy category unconditionally, and the
++			# legacy options have no defaults, so evaluation fails unless ALL of
++			# them are defined. Delete this whole block after `nix flake update nvf`.
++			maps = {
++				normal = {};
++				insert = {};
++				select = {};
++				visual = {};
++				terminal = {};
++				command = {};
++				visualOnly = {};
++				operator = {};
++				insertCommand = {};
++				lang = {};
++				normalVisualOp = {};
++			};
+ 			theme = { enable = true; name = "gruvbox"; style = "dark"; };
+ 			/* luaConfigRC.myIndentation = ''
+ 				vim.opt.expandtab = false
