@@ -38,8 +38,11 @@ git clone https://github.com/yourusername/nixos-config.git /home/connor/git/nixo
 
 2. Apply the configuration:
 ```bash
-sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default
+sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure
 ```
+
+`--impure` is required because `users.users.*.openssh.authorizedKeys.keyFiles`
+reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time.
 
 ## Configuration Structure
 

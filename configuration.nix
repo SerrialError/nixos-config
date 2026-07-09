@@ -8,8 +8,8 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      inputs.home-manager.nixosModules.default
-      inputs.sops-nix.nixosModules.sops
+      # home-manager module is already imported via flake.nix's modules list
+      inputs.agenix.nixosModules.default
     ];
   # Add additional storage mounts
   fileSystems."/mnt/storage" = {
@@ -23,35 +23,45 @@
     fsType = "ext4";
     options = [ "noatime" "nodiratime" "discard" ];
   };
-  sops.defaultSopsFile = ./secrets/secrets.yaml;
-  sops.defaultSopsFormat = "yaml";
-  sops.age.keyFile = "/home/connor/.config/sops/age/keys.txt";
-  sops.secrets.ssh-auth-keys = { 
+  age.identityPaths = [ "/home/connor/.config/sops/age/keys.txt" ];
+  age.secrets.ssh-auth-keys = {
+    file = ./secrets/ssh-auth-keys.age;
     owner = "git";
     mode = "0440";  # Read-only for owner and group
   };
-  
-  # Make the secrets file available during evaluation
-  nix.extraOptions = ''
-    extra-sandbox-paths = ${builtins.path { path = ./secrets; name = "secrets"; }}
-  '';
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [
 	"electron-36.9.5"
+	"electron-39.8.10"
+  ];
+  nixpkgs.overlays = [
+    (final: prev: {
+      valkey = prev.valkey.overrideAttrs (_: {
+        doCheck = false;
+      });
+    })
   ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelParams = [
+    "nvidia.NVreg_TemporaryFilePath=/var/tmp"
+  ];
   networking.hostName = "nixos"; # Define your hostname.
   # Enable networking
   networking.networkmanager.enable = true;
   virtualisation.docker.enable = true;
+  virtualisation.docker.package = pkgs.docker_29;
   virtualisation.docker.rootless = {
     enable = true;
     setSocketVariable = true;
+    # rootless has its own package option; without this it defaults to
+    # pkgs.docker (28.x), which nixpkgs now marks as unmaintained/insecure
+    package = pkgs.docker_29;
   };
+  virtualisation.libvirtd.enable = true;
   users.extraGroups.docker.members = [ "connor" ];
 
   # Enable Bluetooth
@@ -140,8 +150,11 @@
     defaultSession = "none+i3";
   };
   services.ollama = {
-	enable = true;
-	acceleration = "cuda";
+  	enable = true;
+  	acceleration = "cuda";
+  	package = pkgs.ollama.override {
+      cudaArches = [ "61" ];  # Pascal (GTX 1080 Ti)
+  	};
   };
   # hardware.graphics = {
     # enable = true;                                 # turn on the NixOS OpenGL wrapper system
@@ -155,7 +168,7 @@
     # Enable this if you have graphical corruption issues or application crashes after waking
     # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
     # of just the bare essentials.
-    # powerManagement.enable = false;
+    powerManagement.enable = true;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
@@ -185,7 +198,7 @@
     createHome = true;
     shell = "${pkgs.git}/bin/git-shell";
     openssh.authorizedKeys.keyFiles = [
-      config.sops.secrets.ssh-auth-keys.path
+      config.age.secrets.ssh-auth-keys.path
     ];
   };
 
@@ -202,9 +215,10 @@
   users.users.connor = {
     isNormalUser = true;
     description = "connor-pc";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+	shell = pkgs.fish;
+    extraGroups = [ "networkmanager" "wheel" "docker" "libvirtd" ];
     openssh.authorizedKeys.keyFiles = [
-      config.sops.secrets.ssh-auth-keys.path
+      config.age.secrets.ssh-auth-keys.path
     ];
   };
   users.users.nixosvmtest = {
@@ -216,6 +230,8 @@
     extraGroups = [ "networkmanager" "wheel" "docker" ];
   };
   home-manager = {
+    useGlobalPkgs = true;   # share the system nixpkgs (config + overlays) with HM
+    useUserPackages = true; # install HM packages via /etc/profiles (standard on NixOS)
     extraSpecialArgs = { inherit inputs; };
     users = {
       "connor" = import ./home.nix;
@@ -254,7 +270,8 @@
 	gnome-keyring
     unzip
     docker-compose
-    lxappearance
+    qemu
+	lxappearance
     openrocket
     libsForQt5.qt5.qtquickcontrols2   
     chromium
@@ -266,7 +283,8 @@
 	dconf
     paraview
     mpi
-    curlFull
+    alsa-utils
+	curlFull
     networkmanagerapplet
     blueman
     nlohmann_json
@@ -275,17 +293,20 @@
     flex
     gcc-arm-embedded
     hugo
-    killall
+    dnsmasq
+	killall
     go
     mpv
     nitch
     lutris
     code-cursor
     floorp-bin
-    sops
+    inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
     clang
-    age
-    ssh-to-age
+    sioyek
+	qalculate-qt
+	age
+	ssh-to-age
     bitwarden-desktop
     (pkgs.discord.override {
       # remove any overrides that you don't want
@@ -303,7 +324,6 @@
     papirus-icon-theme  # Add Papirus icon theme
     gtk3  # Add GTK3 for icon support
     pulseaudio  # Add pulseaudio for pactl command
-    qemu
     quickemu
     btop-cuda
 	mesa-demos    
@@ -328,8 +348,8 @@
   };      
   programs.seahorse.enable = true;
 
-  # Ensure Bash is available as a shell
-  environment.shells = [ pkgs.bashInteractive ];
+  programs.virt-manager.enable = true;
+  programs.fish.enable = true;
   
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
