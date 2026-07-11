@@ -42,13 +42,6 @@ in
 	"electron-36.9.5"
 	"electron-39.8.10"
   ];
-  nixpkgs.overlays = [
-    (final: prev: {
-      valkey = prev.valkey.overrideAttrs (_: {
-        doCheck = false;
-      });
-    })
-  ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -80,7 +73,6 @@ in
   services.blueman.enable = true;
   services.udisks2.enable = true;
   security.polkit.enable = true;
-  security.polkit.debug = true;
   security.polkit.adminIdentities = [
     "unix-group:wheel"
   ];
@@ -114,23 +106,15 @@ in
     LC_TIME = "en_US.UTF-8";
   };
   security.rtkit.enable = true;
-  services.avahi = {
-    enable = false;
-    nssmdns4 = true;
-    openFirewall = true;
-    publish = {
-      enable = true;
-      userServices = true;
-    };
-  };
   services.printing = {
+    enable = true;
     drivers = [ pkgs.hplip ];
-    listenAddresses = [ "*:631" ];
-    allowFrom = [ "all" ];
-    browsing = true;
-    defaultShared = true;
-    openFirewall = true;
-  };   
+    # Local printing only - not shared to the network.
+    listenAddresses = [ "localhost:631" ];
+    browsing = false;
+    defaultShared = false;
+    openFirewall = false;
+  };
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -365,6 +349,9 @@ in
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
+    # Key-based auth only; authorized keys are deployed via agenix.
+    settings.PasswordAuthentication = false;
+    settings.KbdInteractiveAuthentication = false;
     extraConfig = ''
         Match user git
         AllowTcpForwarding no
