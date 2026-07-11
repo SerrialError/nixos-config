@@ -66,6 +66,14 @@ in {
   programs.codex = {
     enable = true;
   };
+  programs.gh = {
+    enable = true;
+    settings = {
+      git_protocol = "ssh";
+      prompt = "enabled";
+    };
+    gitCredentialHelper.enable = true;
+  };
   
   programs.direnv = {
     enable = true;
@@ -373,26 +381,9 @@ programs.aichat = {
     '';
   };
 
-  # Create and set up the wallpaper script
-  home.file.".local/bin/set-random-wallpaper.sh" = {
-    text = ''
-      #!/usr/bin/env bash
-
-      # Get a random wallpaper from the wallpapers directory
-      WALLPAPER_DIR="$HOME/Pictures/wallpapers"
-      WALLPAPER=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) | shuf -n 1)
-
-      # Set the wallpaper using feh
-      if [ -n "$WALLPAPER" ]; then
-          feh --bg-fill "$WALLPAPER"
-      fi
-    '';
-    executable = true;
-  };
-
-  # Run the wallpaper script when X session starts
+  # Run the wallpaper script (the tracked copy in the repo) when X starts.
   xsession.initExtra = ''
-    $HOME/.local/bin/set-random-wallpaper.sh
+    $HOME/git/nixos-config/set-random-wallpaper.sh
   '';
 
   # Environment variables
@@ -435,15 +426,6 @@ programs.aichat = {
     };
   };
   services.dunst.enable = true;
-  # Create Rofi launcher script
-  home.file.".local/bin/rofi-launcher.sh" = {
-    text = ''
-      #!/usr/bin/env bash
-      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
-      rofi -modi drun -show drun -dump-xresources
-    '';
-    executable = true;
-  };
 
   # Update the terminal path in i3 config
   xsession.windowManager.i3.config.terminal = "${pkgs.alacritty}/bin/alacritty";

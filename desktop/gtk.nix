@@ -69,7 +69,6 @@
     GTK2_RC_FILES = lib.mkForce "${pkgs.gnome-themes-extra}/share/themes/Adwaita/gtk-2.0/gtkrc:${pkgs.gnome-themes-extra}/share/themes/Adwaita-dark/gtk-2.0/gtkrc";
     GTK_DATA_PREFIX = lib.mkForce "${pkgs.gnome-themes-extra}";
     GTK_USE_PORTAL = "1";
-    GTK_IM_MODULE = "ibus";
     GTK_MODULES = "gail:atk-bridge";
     
     # Icon theme settings
