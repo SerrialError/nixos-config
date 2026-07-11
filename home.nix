@@ -59,14 +59,16 @@ in {
   programs.fish = {
     enable = true;
     shellAbbrs = {
-      # rebuild (test only, no activation)
-      nrb = "nixos-rebuild build --flake /home/connor/git/nixos-config#default";
-      # rebuild and switch to the new generation
-      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default";
+      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure";
     };
   };
   programs.codex = {
     enable = true;
+  };
+  
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
   };
   # PDF viewer configuration
   programs.zathura = {
@@ -265,7 +267,7 @@ programs.aichat = {
 	programs.gemini-cli = {
 		enable = true;
 	};
-	# home.packages = [ pkgs.claude-code ];
+	home.packages = [ pkgs.devenv ];
 
 	programs.vinegar.enable = true;
 	# Create Rofi theme directory and theme file

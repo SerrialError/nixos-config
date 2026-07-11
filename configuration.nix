@@ -4,6 +4,12 @@
 
 { config, pkgs, inputs, ... }:
 
+let
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    system = pkgs.stdenv.hostPlatform.system;
+    inherit (config.nixpkgs) config;
+  };
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -272,6 +278,7 @@
     docker-compose
     qemu
 	lxappearance
+    pkgs-unstable.t3code
     openrocket
     libsForQt5.qt5.qtquickcontrols2   
     chromium
