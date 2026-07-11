@@ -16,6 +16,7 @@ in {
     (import ./wm/polybar.nix)
     (import ./desktop/gtk.nix)
     (import ./desktop/lf.nix)
+    ./home
   ];
 
   # Color scheme configuration
@@ -400,17 +401,6 @@ programs.aichat = {
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
     XDG_SESSION_TYPE = "x11";  # Ensure X11 clipboard is used
     XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:${config.home.homeDirectory}/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
-  };
-
-  # Create .profile file
-  home.file.".profile" = {
-    text = ''
-      # Load environment variables
-      export EDITOR="nvim"
-      export STEAM_EXTRA_COMPAT_TOOLS_PATHS="$HOME/.steam/root/compatibilitytools.d"
-      export XDG_SESSION_TYPE="x11"
-      export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$XDG_DATA_DIRS"
-    '';
   };
 
   # Let Home Manager install and manage itself.
