@@ -11,6 +11,13 @@
       decorations = "none";
       dynamic_title = true;
     };
+    font = {
+      normal = {
+        family = "FiraCode Nerd Font";
+        style = "Regular";
+      };
+      size = 11.0;
+    };
     colors = with config.colorScheme.palette; {
       bright = {
         black = "0x${base00}";

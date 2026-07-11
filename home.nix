@@ -63,6 +63,82 @@ in {
       nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure";
     };
   };
+
+  # zsh is the primary interactive shell (see users.users.connor.shell).
+  programs.zsh = {
+    enable = true;
+    autosuggestion.enable = true;      # fish-style inline suggestions
+    syntaxHighlighting.enable = true;  # fish-style command highlighting
+    enableCompletion = true;
+    autocd = true;
+    history = {
+      size = 100000;
+      save = 100000;
+      ignoreDups = true;
+      ignoreSpace = true;
+      expireDuplicatesFirst = true;
+      share = true;
+    };
+    shellAliases = {
+      # rebuild, piping the build log through nix-output-monitor
+      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure |& nom";
+      ls = "eza --icons --group-directories-first";
+      ll = "eza -l --icons --git --group-directories-first";
+      la = "eza -la --icons --git --group-directories-first";
+      lt = "eza --tree --icons --level=2";
+      cat = "bat";
+      gs = "git status";
+      gd = "git diff";
+      gl = "git log --oneline --graph --decorate";
+    };
+  };
+
+  # Cross-shell prompt, gruvbox-themed.
+  programs.starship = {
+    enable = true;
+    settings = {
+      add_newline = true;
+      palette = "gruvbox_dark";
+      format = "$directory$git_branch$git_status$nix_shell$cmd_duration$line_break$character";
+      palettes.gruvbox_dark = {
+        fg = "#ebdbb2";
+        blue = "#83a598";
+        green = "#b8bb26";
+        yellow = "#fabd2f";
+        red = "#fb4934";
+        purple = "#d3869b";
+        aqua = "#8ec07c";
+        orange = "#fe8019";
+      };
+      directory = {
+        style = "bold blue";
+        truncation_length = 3;
+        truncate_to_repo = true;
+      };
+      character = {
+        success_symbol = "[❯](bold green)";
+        error_symbol = "[❯](bold red)";
+      };
+      git_branch = {
+        symbol = " ";
+        style = "bold purple";
+      };
+      git_status.style = "bold yellow";
+      nix_shell = {
+        symbol = " ";
+        style = "bold aqua";
+        format = "via [$symbol$name]($style) ";
+      };
+      cmd_duration = {
+        min_time = 500;
+        style = "bold yellow";
+      };
+    };
+  };
+
+  programs.zoxide.enable = true;  # smarter `cd` (z), integrates with fzf
+  programs.fzf.enable = true;     # fuzzy finder + Ctrl-R / Ctrl-T bindings
+
   programs.codex = {
     enable = true;
   };
@@ -123,6 +199,14 @@ in {
 			user = {
 				name  = "Serrial Error";
 				email = "serrialerror@outlook.com";
+			};
+		};
+		delta = {
+			enable = true;
+			options = {
+				navigate = true;
+				line-numbers = true;
+				side-by-side = false;
 			};
 		};
 	};

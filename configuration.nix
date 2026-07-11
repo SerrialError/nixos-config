@@ -205,7 +205,7 @@ in
   users.users.connor = {
     isNormalUser = true;
     description = "connor-pc";
-	shell = pkgs.fish;
+	shell = pkgs.zsh;
     extraGroups = [ "networkmanager" "wheel" "docker" "libvirtd" ];
     openssh.authorizedKeys.keyFiles = [
       config.age.secrets.ssh-auth-keys.path
@@ -369,6 +369,7 @@ in
 
   programs.virt-manager.enable = true;
   programs.fish.enable = true;
+  programs.zsh.enable = true;
   
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
