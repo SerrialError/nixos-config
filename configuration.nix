@@ -322,7 +322,30 @@ in
     pulseaudio  # Add pulseaudio for pactl command
     quickemu
     btop-cuda
-	mesa-demos    
+	mesa-demos
+
+    # CLI essentials
+    ripgrep   # fast grep; required for nvf/telescope live-grep
+    fd
+    fzf
+    zoxide
+    eza
+    bat
+    jq
+
+    # Git / dev workflow
+    lazygit
+    delta     # nicer git diffs
+
+    # NixOS quality-of-life
+    nix-output-monitor
+    nvd                # diff system generations after a rebuild
+    nixfmt-rfc-style   # formatter for this repo
+    comma              # run any nixpkgs binary once: `, <cmd>`
+
+    # i3 / desktop control
+    playerctl
+    pamixer
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
