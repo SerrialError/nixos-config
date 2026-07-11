@@ -263,6 +263,11 @@ in
     qemu
 	lxappearance
     pkgs-unstable.t3code
+    # AI coding CLIs / git tooling
+    cursor-cli
+    opencode
+    github-desktop
+    pkgs-unstable.grok-cli   # only packaged in nixpkgs-unstable
     openrocket
     libsForQt5.qt5.qtquickcontrols2   
     chromium
