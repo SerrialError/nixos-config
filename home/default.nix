@@ -4,4 +4,4 @@
   imports = [
     ./tmux.nix
   ];
-} 
+}

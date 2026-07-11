@@ -40,7 +40,7 @@ Stable `nixos-25.11` is the default. `nixpkgs-unstable` is imported inside `conf
 
 ### home-manager sharing
 
-`home-manager.useGlobalPkgs = true`, so the system's `nixpkgs.config` (allowUnfree, `permittedInsecurePackages`, overlays) is shared with home-manager — do **not** redefine nixpkgs config in `home.nix`. The same `home.nix` is imported for two users: `connor` (fish, primary) and `nixosvmtest` (bash, VM test account).
+`home-manager.useGlobalPkgs = true`, so the system's `nixpkgs.config` (allowUnfree, `permittedInsecurePackages`, overlays) is shared with home-manager — do **not** redefine nixpkgs config in `home.nix`. The same `home.nix` is imported for two users: `connor` (zsh, primary) and `nixosvmtest` (bash, VM test account).
 
 ### Editor
 
@@ -54,6 +54,6 @@ Neovim is managed by **nvf** (`inputs.nvf`), configured under `programs.nvf` in 
 
 ## Conventions
 
-- Indentation in existing files is inconsistent (mix of tabs and spaces, often within one file). Match the surrounding lines of whatever file you edit.
+- The tree is formatted with **`nixfmt-rfc-style`** (installed in `systemPackages`). Run `nixfmt *.nix wm/*.nix desktop/*.nix home/*.nix` before committing so diffs stay clean.
 - System-wide packages go in `configuration.nix` (`environment.systemPackages`); user-scoped program config goes in `home.nix` or a `wm/`/`desktop/` module.
 - Theming is Gruvbox dark throughout (nix-colors `gruvbox-dark-medium`, rofi/zathura/nvf all set to match).

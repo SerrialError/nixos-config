@@ -1,4 +1,10 @@
-{config, inputs, pkgs, lib, ... }:
+{
+  config,
+  inputs,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   inherit (builtins) readFile;
@@ -7,7 +13,8 @@ let
     path = ./.;
     name = "home-config";
   };
-in {
+in
+{
   imports = [
     inputs.nix-colors.homeManagerModules.default
     inputs.nvf.homeManagerModules.default
@@ -24,7 +31,10 @@ in {
 
   # Nix configuration
   nix = {
-    settings.experimental-features = [ "nix-command" "flakes" ];
+    settings.experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
   };
   # nixpkgs config (allowUnfree, insecure permits, overlays) comes from the
   # system via home-manager.useGlobalPkgs in configuration.nix
@@ -33,11 +43,11 @@ in {
   # home.homeDirectory = "/home/connor";
   home.stateVersion = "25.11";
   home.file."bin/element".text = ''
-	#!/usr/bin/env bash
-  	eval $(gnome-keyring-daemon --start --components=secrets)
-  	export GNOME_KEYRING_CONTROL
-  	export DBUS_SESSION_BUS_ADDRESS
-  	${pkgs.element-desktop}/bin/element-desktop "$@"
+    	#!/usr/bin/env bash
+      	eval $(gnome-keyring-daemon --start --components=secrets)
+      	export GNOME_KEYRING_CONTROL
+      	export DBUS_SESSION_BUS_ADDRESS
+      	${pkgs.element-desktop}/bin/element-desktop "$@"
   '';
 
   # X session configuration
@@ -56,7 +66,7 @@ in {
       videos = "$HOME/Videos";
     };
   };
-  
+
   programs.fish = {
     enable = true;
     shellAbbrs = {
@@ -67,8 +77,8 @@ in {
   # zsh is the primary interactive shell (see users.users.connor.shell).
   programs.zsh = {
     enable = true;
-    autosuggestion.enable = true;      # fish-style inline suggestions
-    syntaxHighlighting.enable = true;  # fish-style command highlighting
+    autosuggestion.enable = true; # fish-style inline suggestions
+    syntaxHighlighting.enable = true; # fish-style command highlighting
     enableCompletion = true;
     autocd = true;
     history = {
@@ -136,8 +146,8 @@ in {
     };
   };
 
-  programs.zoxide.enable = true;  # smarter `cd` (z), integrates with fzf
-  programs.fzf.enable = true;     # fuzzy finder + Ctrl-R / Ctrl-T bindings
+  programs.zoxide.enable = true; # smarter `cd` (z), integrates with fzf
+  programs.fzf.enable = true; # fuzzy finder + Ctrl-R / Ctrl-T bindings
 
   programs.codex = {
     enable = true;
@@ -150,7 +160,7 @@ in {
     };
     gitCredentialHelper.enable = true;
   };
-  
+
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
@@ -158,310 +168,318 @@ in {
   # PDF viewer configuration
   programs.zathura = {
     enable = true;
-		extraConfig = "set selection-clipboard clipboard";
-		options = {
-			# UI Colors
-			notification-bg = "#282a2e";
-			notification-fg = "#c5c8c6";
-			completion-bg = "#282a2e";
-			completion-fg = "#c5c8c6";
+    extraConfig = "set selection-clipboard clipboard";
+    options = {
+      # UI Colors
+      notification-bg = "#282a2e";
+      notification-fg = "#c5c8c6";
+      completion-bg = "#282a2e";
+      completion-fg = "#c5c8c6";
 
-			# PDF Recolor (Dark Mode)
-			recolor = "true";
-			recolor-lightcolor = "#000000"; # Page background
-			recolor-darkcolor = "#c5c8c6";  # Text color
+      # PDF Recolor (Dark Mode)
+      recolor = "true";
+      recolor-lightcolor = "#000000"; # Page background
+      recolor-darkcolor = "#c5c8c6"; # Text color
 
-			# General
-			default-bg = "#1d1f21";
-			statusbar-fg = "#c5c8c6";
-		};
-	};
-
-	# Python plotting library configuration
-	programs.thunderbird = {
-		enable = true;    
-		settings = {
-			# Example: turn off the welcome page
-			"browser.startup.homepage" = "about:blank";
-			# example: enable GPG integration
-			"mail.openpgp.enable" = true;
-		};
-		# If you want multiple profiles, you can define them here:
-		profiles = {
-			default = { isDefault = true; };
-		};
-	};
-
-	# Git configuration
-	programs.git = {
-		enable = true;
-		settings = {
-			user = {
-				name  = "Serrial Error";
-				email = "serrialerror@outlook.com";
-			};
-		};
-		delta = {
-			enable = true;
-			options = {
-				navigate = true;
-				line-numbers = true;
-				side-by-side = false;
-			};
-		};
-	};
-
-	# Rofi configuration
-	programs.rofi = {
-		enable = true;
-		theme = "gruvbox-dark";
-		configPath = ".config/rofi/config.rasi";
-		extraConfig = {
-			modi = "drun,run,window";
-			show-icons = true;
-			icon-theme = "Papirus";
-			font = "Fira Code 12";
-			width = 50;
-			lines = 10;
-			padding = 20;
-			bw = 2;
-			separator-style = "none";
-			hide-scrollbar = true;
-			fullscreen = false;
-			location = 0;
-			fixed-num-lines = true;
-			terminal = "alacritty";
-		};
-	};
-programs.nvf = {
-	enable = true;
-	settings = {
-		vim = {
-			
-			# luaConfigRC.codecompanion = ''
-				# -- Keybindings
-				# vim.keymap.set("n", "<leader>cc", "<cmd>CodeCompanionChat<cr>", { desc = "Open AI chat" })
-				# vim.keymap.set("v", "<leader>cc", "<cmd>CodeCompanionChat<cr>", { desc = "Chat with selection" })
-				# vim.keymap.set("n", "<leader>ca", "<cmd>CodeCompanionActions<cr>", { desc = "AI actions menu" })
-			# '';
-			
-			treesitter = {
-				grammars = [];
-			};
-			# WORKAROUND for nvf rev 63d8fc82d6: its vim.maps -> vim.keymaps
-			# migration shim reads every legacy category unconditionally, and the
-			# legacy options have no defaults, so evaluation fails unless ALL of
-			# them are defined. Delete this whole block after `nix flake update nvf`.
-			maps = {
-				normal = {};
-				insert = {};
-				select = {};
-				visual = {};
-				terminal = {};
-				command = {};
-				visualOnly = {};
-				operator = {};
-				insertCommand = {};
-				lang = {};
-				normalVisualOp = {};
-			};
-			theme = { enable = true; name = "gruvbox"; style = "dark"; };
-			/* luaConfigRC.myIndentation = ''
-				vim.opt.expandtab = false
-				vim.opt.shiftwidth = 4
-				vim.opt.tabstop = 4
-			''; */
-			clipboard.enable = true;
-			clipboard.providers.xclip.enable = true;
-			clipboard.registers = "unnamedplus";
-			statusline.lualine.enable = true;
-			telescope.enable = true;
-			autocomplete.nvim-cmp.enable = true;
-			languages = {
-				enableTreesitter = true;
-				nix.enable = true;
-				clang.enable = true;
-				typescript.enable = true;
-				rust.enable = true;
-			};
-			lsp = {
-				enable = true;
-				servers = {
-					clangd = {
-						enable = true;
-					};
-				};
-			};
-		};
-	};
-};
-	programs.claude-code = {
-		enable = true;	
-	};
-programs.aichat = {
-  enable = true;
-  
-  settings = {
-    model = "ollama:qwen2.5-coder:14b";
-    rag_embedding_model = "nomic-embed-text:latest";
-    rag_top_k = 5;
-    temperature = 0.5;
-    stream = true;
-    save = true;
-    highlight = true;
-    
-    clients = [
-      {
-        # Order matters! type and name must come first
-        type = "openai-compatible";
-        name = "ollama";
-        api_base = "http://localhost:11434/v1";
-        models = [
-          {
-            name = "qwen2.5-coder:14b";
-            max_input_tokens = 131072;
-            supports_function_calling = true;
-          }
-          {
-            name = "qwen2.5-coder:7b";
-            max_input_tokens = 131072;
-            supports_function_calling = true;
-          }
-          {
-            name = "nomic-embed-text:latest";
-            type = "embedding";
-            default_chunk_size = 1000;
-            max_batch_size = 50;
-          }
-        ];
-      }
-    ];
-  };
-  
-  agents = {
-    review = {
-      model = "ollama:qwen2.5-coder:14b";
-      temperature = 0.3;
-      instructions = "You are a code reviewer. Analyze code for bugs, performance issues, and best practices.";
-    };
-    coder = {
-      model = "ollama:qwen2.5-coder:14b";
-      temperature = 0.3;
-      use_tools = "fs";
-      instructions = "You are a coding assistant. Provide concise, practical solutions. Make sure to be detailed in your work.";
-    };
-    chat = {
-      model = "ollama:qwen2.5-coder:7b";
-      temperature = 0.7;
-      instructions = "You are a chatbot, a variety of questions will be asked. Be as detailed and thoughtful as possible in your answer. Listen to everything the user has to say, it is your friend.";
+      # General
+      default-bg = "#1d1f21";
+      statusbar-fg = "#c5c8c6";
     };
   };
-};
-	programs.gemini-cli = {
-		enable = true;
-	};
-	home.packages = [ pkgs.devenv ];
 
-	programs.vinegar.enable = true;
-	# Create Rofi theme directory and theme file
-	home.file.".config/rofi/themes/gruvbox-dark.rasi" = {
-		text = ''
-	  * {
-		  bg: #282828;
-		  bg-alt: #3c3836;
-		  fg: #ebdbb2;
-		  fg-alt: #a89984;
+  # Python plotting library configuration
+  programs.thunderbird = {
+    enable = true;
+    settings = {
+      # Example: turn off the welcome page
+      "browser.startup.homepage" = "about:blank";
+      # example: enable GPG integration
+      "mail.openpgp.enable" = true;
+    };
+    # If you want multiple profiles, you can define them here:
+    profiles = {
+      default = {
+        isDefault = true;
+      };
+    };
+  };
 
-		  border: 0;
-		  margin: 0;
-		  padding: 0;
-		  spacing: 0;
-	  }
+  # Git configuration
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "Serrial Error";
+        email = "serrialerror@outlook.com";
+      };
+    };
+    delta = {
+      enable = true;
+      options = {
+        navigate = true;
+        line-numbers = true;
+        side-by-side = false;
+      };
+    };
+  };
 
-	  window {
-          width: 50%;
-          background-color: @bg;
-      }
+  # Rofi configuration
+  programs.rofi = {
+    enable = true;
+    theme = "gruvbox-dark";
+    configPath = ".config/rofi/config.rasi";
+    extraConfig = {
+      modi = "drun,run,window";
+      show-icons = true;
+      icon-theme = "Papirus";
+      font = "Fira Code 12";
+      width = 50;
+      lines = 10;
+      padding = 20;
+      bw = 2;
+      separator-style = "none";
+      hide-scrollbar = true;
+      fullscreen = false;
+      location = 0;
+      fixed-num-lines = true;
+      terminal = "alacritty";
+    };
+  };
+  programs.nvf = {
+    enable = true;
+    settings = {
+      vim = {
 
-      element {
-          padding: 8 12;
-          background-color: transparent;
-      }
+        # luaConfigRC.codecompanion = ''
+        # -- Keybindings
+        # vim.keymap.set("n", "<leader>cc", "<cmd>CodeCompanionChat<cr>", { desc = "Open AI chat" })
+        # vim.keymap.set("v", "<leader>cc", "<cmd>CodeCompanionChat<cr>", { desc = "Chat with selection" })
+        # vim.keymap.set("n", "<leader>ca", "<cmd>CodeCompanionActions<cr>", { desc = "AI actions menu" })
+        # '';
 
-      element normal.normal {
-          background-color: transparent;
-          text-color: @fg;
-      }
+        treesitter = {
+          grammars = [ ];
+        };
+        # WORKAROUND for nvf rev 63d8fc82d6: its vim.maps -> vim.keymaps
+        # migration shim reads every legacy category unconditionally, and the
+        # legacy options have no defaults, so evaluation fails unless ALL of
+        # them are defined. Delete this whole block after `nix flake update nvf`.
+        maps = {
+          normal = { };
+          insert = { };
+          select = { };
+          visual = { };
+          terminal = { };
+          command = { };
+          visualOnly = { };
+          operator = { };
+          insertCommand = { };
+          lang = { };
+          normalVisualOp = { };
+        };
+        theme = {
+          enable = true;
+          name = "gruvbox";
+          style = "dark";
+        };
+        /*
+          luaConfigRC.myIndentation = ''
+          				vim.opt.expandtab = false
+          				vim.opt.shiftwidth = 4
+          				vim.opt.tabstop = 4
+          			'';
+        */
+        clipboard.enable = true;
+        clipboard.providers.xclip.enable = true;
+        clipboard.registers = "unnamedplus";
+        statusline.lualine.enable = true;
+        telescope.enable = true;
+        autocomplete.nvim-cmp.enable = true;
+        languages = {
+          enableTreesitter = true;
+          nix.enable = true;
+          clang.enable = true;
+          typescript.enable = true;
+          rust.enable = true;
+        };
+        lsp = {
+          enable = true;
+          servers = {
+            clangd = {
+              enable = true;
+            };
+          };
+        };
+      };
+    };
+  };
+  programs.claude-code = {
+    enable = true;
+  };
+  programs.aichat = {
+    enable = true;
 
-      element normal.urgent {
-          background-color: #fb4934;
-          text-color: @bg;
-      }
+    settings = {
+      model = "ollama:qwen2.5-coder:14b";
+      rag_embedding_model = "nomic-embed-text:latest";
+      rag_top_k = 5;
+      temperature = 0.5;
+      stream = true;
+      save = true;
+      highlight = true;
 
-      element normal.active {
-          background-color: #458588;
-          text-color: @bg;
-      }
+      clients = [
+        {
+          # Order matters! type and name must come first
+          type = "openai-compatible";
+          name = "ollama";
+          api_base = "http://localhost:11434/v1";
+          models = [
+            {
+              name = "qwen2.5-coder:14b";
+              max_input_tokens = 131072;
+              supports_function_calling = true;
+            }
+            {
+              name = "qwen2.5-coder:7b";
+              max_input_tokens = 131072;
+              supports_function_calling = true;
+            }
+            {
+              name = "nomic-embed-text:latest";
+              type = "embedding";
+              default_chunk_size = 1000;
+              max_batch_size = 50;
+            }
+          ];
+        }
+      ];
+    };
 
-      element selected.normal {
-          background-color: #458588;
-          text-color: @bg;
-      }
+    agents = {
+      review = {
+        model = "ollama:qwen2.5-coder:14b";
+        temperature = 0.3;
+        instructions = "You are a code reviewer. Analyze code for bugs, performance issues, and best practices.";
+      };
+      coder = {
+        model = "ollama:qwen2.5-coder:14b";
+        temperature = 0.3;
+        use_tools = "fs";
+        instructions = "You are a coding assistant. Provide concise, practical solutions. Make sure to be detailed in your work.";
+      };
+      chat = {
+        model = "ollama:qwen2.5-coder:7b";
+        temperature = 0.7;
+        instructions = "You are a chatbot, a variety of questions will be asked. Be as detailed and thoughtful as possible in your answer. Listen to everything the user has to say, it is your friend.";
+      };
+    };
+  };
+  programs.gemini-cli = {
+    enable = true;
+  };
+  home.packages = [ pkgs.devenv ];
 
-      element selected.urgent {
-          background-color: #fb4934;
-          text-color: @bg;
-      }
+  programs.vinegar.enable = true;
+  # Create Rofi theme directory and theme file
+  home.file.".config/rofi/themes/gruvbox-dark.rasi" = {
+    text = ''
+      	  * {
+      		  bg: #282828;
+      		  bg-alt: #3c3836;
+      		  fg: #ebdbb2;
+      		  fg-alt: #a89984;
 
-      element selected.active {
-          background-color: #458588;
-          text-color: @bg;
-      }
+      		  border: 0;
+      		  margin: 0;
+      		  padding: 0;
+      		  spacing: 0;
+      	  }
 
-      element-text {
-          background-color: transparent;
-          text-color: inherit;
-          vertical-align: 0.5;
-      }
+      	  window {
+                width: 50%;
+                background-color: @bg;
+            }
 
-      element-icon {
-          background-color: transparent;
-          text-color: inherit;
-          size: 24;
-          padding: 0 10 0 0;
-      }
+            element {
+                padding: 8 12;
+                background-color: transparent;
+            }
 
-      entry {
-          padding: 12;
-          background-color: @bg-alt;
-      }
+            element normal.normal {
+                background-color: transparent;
+                text-color: @fg;
+            }
 
-      inputbar {
-          children: [entry];
-      }
+            element normal.urgent {
+                background-color: #fb4934;
+                text-color: @bg;
+            }
 
-      listview {
-          background-color: @bg;
-          columns: 1;
-          lines: 10;
-      }
+            element normal.active {
+                background-color: #458588;
+                text-color: @bg;
+            }
 
-      mainbox {
-          children: [inputbar, listview];
-      }
+            element selected.normal {
+                background-color: #458588;
+                text-color: @bg;
+            }
 
-      prompt {
-          enabled: true;
-          padding: 12 0 0 0;
-          background-color: @bg-alt;
-      }
+            element selected.urgent {
+                background-color: #fb4934;
+                text-color: @bg;
+            }
 
-      textbox-prompt-colon {
-          expand: false;
-          str: ":";
-          margin: 0 0.3em 0 0;
-          text-color: @fg-alt;
-      }
+            element selected.active {
+                background-color: #458588;
+                text-color: @bg;
+            }
+
+            element-text {
+                background-color: transparent;
+                text-color: inherit;
+                vertical-align: 0.5;
+            }
+
+            element-icon {
+                background-color: transparent;
+                text-color: inherit;
+                size: 24;
+                padding: 0 10 0 0;
+            }
+
+            entry {
+                padding: 12;
+                background-color: @bg-alt;
+            }
+
+            inputbar {
+                children: [entry];
+            }
+
+            listview {
+                background-color: @bg;
+                columns: 1;
+                lines: 10;
+            }
+
+            mainbox {
+                children: [inputbar, listview];
+            }
+
+            prompt {
+                enabled: true;
+                padding: 12 0 0 0;
+                background-color: @bg-alt;
+            }
+
+            textbox-prompt-colon {
+                expand: false;
+                str: ":";
+                margin: 0 0.3em 0 0;
+                text-color: @fg-alt;
+            }
     '';
   };
 
@@ -474,7 +492,7 @@ programs.aichat = {
   home.sessionVariables = {
     EDITOR = "nvim";
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
-    XDG_SESSION_TYPE = "x11";  # Ensure X11 clipboard is used
+    XDG_SESSION_TYPE = "x11"; # Ensure X11 clipboard is used
     XDG_DATA_DIRS = "/var/lib/flatpak/exports/share:${config.home.homeDirectory}/.local/share/flatpak/exports/share:$XDG_DATA_DIRS";
   };
 
@@ -485,26 +503,28 @@ programs.aichat = {
 
   services.syncthing = {
     enable = true;
-    settings = {    
+    settings = {
       devices = {
-        "laptop" = { id = "QSDBXQP-LWMP27Y-2R3UPXB-FJKCFCL-BYFXURB-JAJU4W3-IWZKTTJ-HURJ5QC"; };
+        "laptop" = {
+          id = "QSDBXQP-LWMP27Y-2R3UPXB-FJKCFCL-BYFXURB-JAJU4W3-IWZKTTJ-HURJ5QC";
+        };
       };
       folders = {
         "Documents" = {
           path = "${config.home.homeDirectory}/Documents";
-	  devices = [ "laptop" ];
+          devices = [ "laptop" ];
         };
         "Pictures" = {
           path = "${config.home.homeDirectory}/Pictures";
-	  devices = [ "laptop" ];
+          devices = [ "laptop" ];
         };
         "Videos" = {
           path = "${config.home.homeDirectory}/Videos";
-	  devices = [ "laptop" ];
+          devices = [ "laptop" ];
         };
         "Music" = {
           path = "${config.home.homeDirectory}/Music";
-	  devices = [ "laptop" ];
+          devices = [ "laptop" ];
         };
       };
     };
@@ -514,4 +534,3 @@ programs.aichat = {
   # Update the terminal path in i3 config
   xsession.windowManager.i3.config.terminal = "${pkgs.alacritty}/bin/alacritty";
 }
-

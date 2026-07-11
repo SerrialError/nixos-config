@@ -2,7 +2,12 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   pkgs-unstable = import inputs.nixpkgs-unstable {
@@ -11,36 +16,44 @@ let
   };
 in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      # home-manager module is already imported via flake.nix's modules list
-      inputs.agenix.nixosModules.default
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    # home-manager module is already imported via flake.nix's modules list
+    inputs.agenix.nixosModules.default
+  ];
   # Add additional storage mounts
   fileSystems."/mnt/storage" = {
     device = "/dev/disk/by-label/storage";
     fsType = "ext4";
-    options = [ "noatime" "nodiratime" "discard" ];
+    options = [
+      "noatime"
+      "nodiratime"
+      "discard"
+    ];
   };
 
   fileSystems."/mnt/nvme" = {
     device = "/dev/nvme0n1p1";
     fsType = "ext4";
-    options = [ "noatime" "nodiratime" "discard" ];
+    options = [
+      "noatime"
+      "nodiratime"
+      "discard"
+    ];
   };
   age.identityPaths = [ "/home/connor/.config/sops/age/keys.txt" ];
   age.secrets.ssh-auth-keys = {
     file = ./secrets/ssh-auth-keys.age;
     owner = "git";
-    mode = "0440";  # Read-only for owner and group
+    mode = "0440"; # Read-only for owner and group
   };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [
-	"electron-36.9.5"
-	"electron-39.8.10"
+    "electron-36.9.5"
+    "electron-39.8.10"
   ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -87,7 +100,6 @@ in
     configPackages = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
-
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";
 
@@ -120,8 +132,8 @@ in
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    jack.enable = true;  # Enable JACK support
-    wireplumber.enable = true;  # Use wireplumber instead of media-session
+    jack.enable = true; # Enable JACK support
+    wireplumber.enable = true; # Use wireplumber instead of media-session
   };
 
   # Disable PulseAudio since we're using PipeWire
@@ -130,7 +142,7 @@ in
   # Configure keymap in X11
   services.xserver = {
     enable = true;
-    videoDrivers = ["nvidia"];
+    videoDrivers = [ "nvidia" ];
     displayManager.lightdm.enable = true;
     windowManager.i3.enable = true;
     xkb.layout = "us";
@@ -140,14 +152,14 @@ in
     defaultSession = "none+i3";
   };
   services.ollama = {
-  	enable = true;
-  	acceleration = "cuda";
-  	package = pkgs.ollama.override {
-      cudaArches = [ "61" ];  # Pascal (GTX 1080 Ti)
-  	};
+    enable = true;
+    acceleration = "cuda";
+    package = pkgs.ollama.override {
+      cudaArches = [ "61" ]; # Pascal (GTX 1080 Ti)
+    };
   };
   # hardware.graphics = {
-    # enable = true;                                 # turn on the NixOS OpenGL wrapper system
+  # enable = true;                                 # turn on the NixOS OpenGL wrapper system
   # };
   hardware.nvidia = {
 
@@ -156,7 +168,7 @@ in
 
     # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
     # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
+    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
     # of just the bare essentials.
     powerManagement.enable = true;
 
@@ -166,21 +178,21 @@ in
 
     # Use the NVidia open source kernel module (not to be confused with the
     # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of 
-    # supported GPUs is at: 
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
+    # Support is limited to the Turing and later architectures. Full list of
+    # supported GPUs is at:
+    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
     # Only available from driver 515.43.04+
     open = false;
 
     # Enable the Nvidia settings menu,
-	# accessible via `nvidia-settings`.
+    # accessible via `nvidia-settings`.
     # nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
     # package = config.boot.kernelPackages.nvidiaPackages.latest;
   };
   # Define a user account. Don't forget to set a password with 'passwd'.
-  users.groups.git = {};
+  users.groups.git = { };
   users.users.git = {
     isSystemUser = true;
     group = "git";
@@ -205,8 +217,13 @@ in
   users.users.connor = {
     isNormalUser = true;
     description = "connor-pc";
-	shell = pkgs.zsh;
-    extraGroups = [ "networkmanager" "wheel" "docker" "libvirtd" ];
+    shell = pkgs.zsh;
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+      "libvirtd"
+    ];
     openssh.authorizedKeys.keyFiles = [
       config.age.secrets.ssh-auth-keys.path
     ];
@@ -217,10 +234,14 @@ in
     description = "vm test";
     initialPassword = "test";
     shell = pkgs.bashInteractive;
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+    ];
   };
   home-manager = {
-    useGlobalPkgs = true;   # share the system nixpkgs (config + overlays) with HM
+    useGlobalPkgs = true; # share the system nixpkgs (config + overlays) with HM
     useUserPackages = true; # install HM packages via /etc/profiles (standard on NixOS)
     extraSpecialArgs = { inherit inputs; };
     users = {
@@ -239,48 +260,48 @@ in
   ];
 
   environment.systemPackages = with pkgs; [
-	obs-studio
-	claude-monitor
-	heroic
-	fastfetch
-	tmux
-	gdb
+    obs-studio
+    claude-monitor
+    heroic
+    fastfetch
+    tmux
+    gdb
     polkit_gnome
     gimp
-	vscode
+    vscode
     prismlauncher
     cups-printers
     kitty
     libnotify
-    feh 
+    feh
     mupdf
     protonup-ng
     obsidian
-	libsecret
-	gnome-keyring
+    libsecret
+    gnome-keyring
     unzip
     docker-compose
     qemu
-	lxappearance
+    lxappearance
     pkgs-unstable.t3code
     # AI coding CLIs / git tooling
     cursor-cli
     opencode
     github-desktop
-    pkgs-unstable.grok-cli   # only packaged in nixpkgs-unstable
+    pkgs-unstable.grok-cli # only packaged in nixpkgs-unstable
     openrocket
-    libsForQt5.qt5.qtquickcontrols2   
+    libsForQt5.qt5.qtquickcontrols2
     chromium
     libsForQt5.qt5.qtgraphicaleffects
     pavucontrol
     wineWowPackages.stable
     winetricks
-	element-desktop
-	dconf
+    element-desktop
+    dconf
     paraview
     mpi
     alsa-utils
-	curlFull
+    curlFull
     networkmanagerapplet
     blueman
     nlohmann_json
@@ -290,7 +311,7 @@ in
     gcc-arm-embedded
     hugo
     dnsmasq
-	killall
+    killall
     go
     mpv
     nitch
@@ -300,32 +321,32 @@ in
     inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
     clang
     sioyek
-	qalculate-qt
-	age
-	ssh-to-age
+    qalculate-qt
+    age
+    ssh-to-age
     bitwarden-desktop
     (pkgs.discord.override {
       # remove any overrides that you don't want
-       withOpenASAR = true;
-       withVencord = true;
-     })       
+      withOpenASAR = true;
+      withVencord = true;
+    })
     rsync
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     mangohud
-    xclip  # Add xclip for clipboard support
-    rofi    # Add rofi for application launcher
-    desktop-file-utils  # Add desktop-file-utils for desktop database management
-    adwaita-icon-theme  # Add icon theme
-    papirus-icon-theme  # Add Papirus icon theme
-    gtk3  # Add GTK3 for icon support
-    pulseaudio  # Add pulseaudio for pactl command
+    xclip # Add xclip for clipboard support
+    rofi # Add rofi for application launcher
+    desktop-file-utils # Add desktop-file-utils for desktop database management
+    adwaita-icon-theme # Add icon theme
+    papirus-icon-theme # Add Papirus icon theme
+    gtk3 # Add GTK3 for icon support
+    pulseaudio # Add pulseaudio for pactl command
     quickemu
     btop-cuda
-	mesa-demos
+    mesa-demos
 
     # CLI essentials
-    ripgrep   # fast grep; required for nvf/telescope live-grep
+    ripgrep # fast grep; required for nvf/telescope live-grep
     fd
     fzf
     zoxide
@@ -335,13 +356,13 @@ in
 
     # Git / dev workflow
     lazygit
-    delta     # nicer git diffs
+    delta # nicer git diffs
 
     # NixOS quality-of-life
     nix-output-monitor
-    nvd                # diff system generations after a rebuild
-    nixfmt-rfc-style   # formatter for this repo
-    comma              # run any nixpkgs binary once: `, <cmd>`
+    nvd # diff system generations after a rebuild
+    nixfmt-rfc-style # formatter for this repo
+    comma # run any nixpkgs binary once: `, <cmd>`
 
     # i3 / desktop control
     playerctl
@@ -364,13 +385,13 @@ in
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
-  };      
+  };
   programs.seahorse.enable = true;
 
   programs.virt-manager.enable = true;
   programs.fish.enable = true;
   programs.zsh.enable = true;
-  
+
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.login.enableGnomeKeyring = true;
@@ -382,12 +403,12 @@ in
     settings.PasswordAuthentication = false;
     settings.KbdInteractiveAuthentication = false;
     extraConfig = ''
-        Match user git
-        AllowTcpForwarding no
-        AllowAgentForwarding no
-        PasswordAuthentication no
-        PermitTTY no
-        X11Forwarding no
+      Match user git
+      AllowTcpForwarding no
+      AllowAgentForwarding no
+      PasswordAuthentication no
+      PermitTTY no
+      X11Forwarding no
     '';
   };
   services.dbus.enable = true;

@@ -3,8 +3,8 @@
 {
   # Required packages
   home.packages = with pkgs; [
-    pavucontrol    # For volume control
-    nerd-fonts.jetbrains-mono  # For JetBrains Mono Nerd Font
+    pavucontrol # For volume control
+    nerd-fonts.jetbrains-mono # For JetBrains Mono Nerd Font
   ];
 
   # Polybar configuration

@@ -1,11 +1,17 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   modifier = config.xsession.windowManager.i3.config.modifier;
-in {
+in
+{
   xsession.windowManager.i3 = {
     enable = true;
-    package = pkgs.i3;  
+    package = pkgs.i3;
     config = {
       modifier = "Mod4";
       terminal = "alacritty";
@@ -28,7 +34,7 @@ in {
       };
 
       # Disable i3bar since we're using Polybar
-      bars = [];
+      bars = [ ];
 
       # Keybindings
       keybindings = lib.mkOptionDefault {
@@ -94,14 +100,20 @@ in {
   # Picom compositor configuration
   services.picom = {
     enable = true;
-	backend = "glx";
-	vSync = true;
+    backend = "glx";
+    vSync = true;
     package = pkgs.picom;
     fade = true;
     fadeDelta = 5;
-    fadeSteps = [ 0.03 0.03 ];
+    fadeSteps = [
+      0.03
+      0.03
+    ];
     shadow = true;
-    shadowOffsets = [ (-10) (-10) ];
+    shadowOffsets = [
+      (-10)
+      (-10)
+    ];
     shadowOpacity = 0.3;
     settings = {
       # Blur settings
@@ -118,11 +130,24 @@ in {
       ];
       # Window type settings
       wintypes = {
-        tooltip = { fade = true; shadow = true; opacity = 0.1; focus = true; };
-        dock = { shadow = true; };
-        dnd = { shadow = true; };
-        popup_menu = { opacity = 0.95; };
-        dropdown_menu = { opacity = 0.95; };
+        tooltip = {
+          fade = true;
+          shadow = true;
+          opacity = 0.1;
+          focus = true;
+        };
+        dock = {
+          shadow = true;
+        };
+        dnd = {
+          shadow = true;
+        };
+        popup_menu = {
+          opacity = 0.95;
+        };
+        dropdown_menu = {
+          opacity = 0.95;
+        };
       };
       # Inactive window settings
       inactive-opacity = 0.95;
@@ -138,4 +163,4 @@ in {
       ];
     };
   };
-} 
+}

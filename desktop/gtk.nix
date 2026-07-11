@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   # GTK theme configuration
@@ -70,16 +75,16 @@
     GTK_DATA_PREFIX = lib.mkForce "${pkgs.gnome-themes-extra}";
     GTK_USE_PORTAL = "1";
     GTK_MODULES = "gail:atk-bridge";
-    
+
     # Icon theme settings
     XDG_ICON_THEME = "Papirus-Dark";
     GTK_ICON_THEME = "Papirus-Dark";
     ICON_THEME = "Papirus-Dark";
-    
+
     # Cursor theme settings
     XCURSOR_THEME = "Bibata-Modern-Ice";
     XCURSOR_SIZE = "24";
-    
+
     # QT theme settings
     QT_STYLE_OVERRIDE = "adwaita-dark";
     QT_QPA_PLATFORMTHEME = lib.mkForce "gtk";
@@ -96,23 +101,23 @@
     gnome-themes-extra
     gtk3
     gtk4
-    
+
     # Icon themes
     papirus-icon-theme
     papirus-folders
     hicolor-icon-theme
     adwaita-icon-theme
     bibata-cursors
-    
+
     # Qt themes
     adwaita-qt
     qt5.qtbase
     qt6.qtbase
-    
+
     # Additional theming tools
-    lxappearance  # GTK theme switcher
-    libsForQt5.qt5ct  # Qt theme switcher
-    gsettings-desktop-schemas  # Required for GTK settings
+    lxappearance # GTK theme switcher
+    libsForQt5.qt5ct # Qt theme switcher
+    gsettings-desktop-schemas # Required for GTK settings
   ];
 
   # Create a script to customize Papirus folder colors
@@ -129,4 +134,4 @@
   xsession.initExtra = ''
     $HOME/.local/bin/customize-papirus-folders
   '';
-} 
+}
