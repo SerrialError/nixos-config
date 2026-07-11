@@ -34,7 +34,7 @@ in {
       keybindings = lib.mkOptionDefault {
         "${modifier}+Return" = "exec alacritty";
         "${modifier}+q" = "kill";
-        "${modifier}+Shift+p" = "exec rofi -modi drun -show drun -dump-xresources";
+        "${modifier}+Shift+p" = "exec rofi -show drun";
         "${modifier}+Shift+d" = "exec discord";
         "${modifier}+Shift+f" = "exec floorp";
         "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/set-random-wallpaper.sh";
@@ -42,11 +42,12 @@ in {
       };
 
       # Startup applications
+      # picom is started by the services.picom systemd user service below,
+      # so it must NOT be launched here as well.
       startup = [
         { command = "nm-applet"; }
         { command = "sleep 2 && blueman-applet"; }
         { command = "flameshot"; }
-        { command = "picom --experimental-backends"; }
       ];
 
       colors = {

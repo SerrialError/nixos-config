@@ -3,7 +3,6 @@
 {
   # Required packages
   home.packages = with pkgs; [
-    brightnessctl  # For backlight control
     pavucontrol    # For volume control
     nerd-fonts.jetbrains-mono  # For JetBrains Mono Nerd Font
   ];
@@ -48,7 +47,7 @@
         separator-foreground = "\${colors.disabled}";
         font-0 = "JetBrainsMono Nerd Font:size=10;2";
         modules-left = "systray xworkspaces xwindow";
-        modules-right = "battery temperature pulseaudio backlight date";
+        modules-right = "temperature pulseaudio date";
         cursor-click = "pointer";
         cursor-scroll = "ns-resize";
         enable-ipc = true;
@@ -92,20 +91,6 @@
         label-muted-foreground = "\${colors.disabled}";
       };
 
-      "module/battery" = {
-        type = "internal/battery";
-        format-bat = "<label-bat>";
-        label-bat = "%percentage%%";
-        format-charging = "<label-charging>";
-        label-charging = "Charging %percentage%%";
-        format-low = "<label-low>";
-        label-low = "BATTERY LOW %percentage%%";
-        low-at = 20;
-        battery = "BAT0";
-        adapter = "ADP0";
-        poll-interval = 5;
-      };
-
       "module/date" = {
         type = "internal/date";
         interval = 1;
@@ -115,20 +100,14 @@
         label-foreground = "\${colors.primary}";
       };
 
-      "module/backlight" = {
-        type = "internal/backlight";
-        card = "intel_backlight";
-        format = "<label>";
-        label = "%percentage%%";
-        label-foreground = "\${colors.foreground}";
-      };
-
       "module/temperature" = {
         type = "internal/temperature";
         interval = "1";
-        thermal-zone = 0;
+        # thermal_zone2 is the x86_pkg_temp (CPU package) zone on this host.
+        # hwmon indices are unstable across boots, so drive it off the zone
+        # rather than a hardcoded /sys/.../hwmonN path.
+        thermal-zone = 2;
         zone-type = "x86_pkg_temp";
-        hwmon-path = "/sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input";
         base-temperature = 20;
         warn-temperature = 60;
         label = "%temperature-f%";
@@ -143,30 +122,4 @@
       };
     };
   };
-
-  # Create brightness script for Polybar
-  home.file.".config/polybar/scripts/brightnes-onscroll.sh" = {
-    text = ''
-      #!/usr/bin/env bash
-      
-      # Get current brightness
-      current=$(brightnessctl g)
-      max=$(brightnessctl m)
-      
-      # Calculate percentage
-      percent=$((current * 100 / max))
-      
-      # Output with icon
-      if [ "$percent" -gt 80 ]; then
-          echo "󰃠 $percent%"
-      elif [ "$percent" -gt 50 ]; then
-          echo "󰃟 $percent%"
-      elif [ "$percent" -gt 20 ]; then
-          echo "󰃞 $percent%"
-      else
-          echo "󰃝 $percent%"
-      fi
-    '';
-    executable = true;
-  };
-} 
+}
