@@ -6,6 +6,16 @@
 }:
 
 {
+  # Drives the XDG desktop portal's org.freedesktop.appearance color-scheme.
+  # libadwaita/GTK4 apps set to "default system appearance" read this via the
+  # portal (xdg-desktop-portal-gtk); without prefer-dark they fall back to light.
+  dconf.settings."org/gnome/desktop/interface" = {
+    color-scheme = "prefer-dark";
+    gtk-theme = "adw-gtk3-dark";
+    icon-theme = "Papirus-Dark";
+    cursor-theme = "Bibata-Modern-Ice";
+  };
+
   # GTK theme configuration
   gtk = {
     enable = true;
@@ -110,7 +120,8 @@
     bibata-cursors
 
     # Qt themes
-    adwaita-qt
+    adwaita-qt # Qt5 adwaita-dark style
+    adwaita-qt6 # Qt6 adwaita-dark style
     qt5.qtbase
     qt6.qtbase
 
