@@ -9,10 +9,8 @@ This repository contains my personal NixOS configuration, featuring a customized
   - System tray
   - Workspace management
   - Window title display
-  - Battery status
   - Temperature monitoring
   - Volume control
-  - Backlight control
   - Date/time display
 - Custom GTK and Qt theming
 - Random wallpaper selection on startup
@@ -33,7 +31,7 @@ This repository contains my personal NixOS configuration, featuring a customized
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/nixos-config.git /home/connor/git/nixos-config
+git clone https://github.com/SerrialError/nixos-config.git /home/connor/git/nixos-config
 ```
 
 2. Apply the configuration:
@@ -47,10 +45,12 @@ reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time.
 ## Configuration Structure
 
 - `configuration.nix`: Main NixOS system configuration
-- `home.nix`: Home Manager configuration for user-specific settings
-- `hardware-configuration.nix`: Hardware-specific configuration (not tracked in git)
-- `features/`: Directory containing modular configuration components
-- `nvim/`: Neovim configuration files
+- `home.nix`: Home Manager entrypoint for user-specific settings
+- `hardware-configuration.nix`: Hardware-specific configuration
+- `wm/`: Window manager modules (i3, polybar)
+- `desktop/`: Desktop modules (GTK/Qt theming, lf file manager)
+- `home/`: Additional home-manager modules (tmux)
+- Neovim is configured via the `nvf` flake input under `programs.nvf` in `home.nix`
 
 ## Customization
 
@@ -58,13 +58,13 @@ To customize this configuration:
 
 1. Modify `configuration.nix` for system-wide changes
 2. Edit `home.nix` for user-specific settings
-3. Add or modify modules in the `features/` directory
+3. Add or modify modules in the `wm/`, `desktop/`, or `home/` directories
 
 ## Keybindings
 
 - `Mod4 + Return`: Open terminal (Alacritty)
 - `Mod4 + q`: Close window
-- `Mod4 + Shift + p`: Run dmenu
+- `Mod4 + Shift + p`: Application launcher (rofi)
 - `Mod4 + Shift + d`: Launch Discord
 - `Mod4 + Shift + f`: Launch Floorp browser
 - `Mod4 + Shift + n`: Change to a random wallpaper
