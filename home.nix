@@ -365,65 +365,6 @@ in
   programs.claude-code = {
     enable = true;
   };
-  programs.aichat = {
-    enable = true;
-
-    settings = {
-      model = "ollama:qwen2.5-coder:14b";
-      rag_embedding_model = "nomic-embed-text:latest";
-      rag_top_k = 5;
-      temperature = 0.5;
-      stream = true;
-      save = true;
-      highlight = true;
-
-      clients = [
-        {
-          # Order matters! type and name must come first
-          type = "openai-compatible";
-          name = "ollama";
-          api_base = "http://localhost:11434/v1";
-          models = [
-            {
-              name = "qwen2.5-coder:14b";
-              max_input_tokens = 131072;
-              supports_function_calling = true;
-            }
-            {
-              name = "qwen2.5-coder:7b";
-              max_input_tokens = 131072;
-              supports_function_calling = true;
-            }
-            {
-              name = "nomic-embed-text:latest";
-              type = "embedding";
-              default_chunk_size = 1000;
-              max_batch_size = 50;
-            }
-          ];
-        }
-      ];
-    };
-
-    agents = {
-      review = {
-        model = "ollama:qwen2.5-coder:14b";
-        temperature = 0.3;
-        instructions = "You are a code reviewer. Analyze code for bugs, performance issues, and best practices.";
-      };
-      coder = {
-        model = "ollama:qwen2.5-coder:14b";
-        temperature = 0.3;
-        use_tools = "fs";
-        instructions = "You are a coding assistant. Provide concise, practical solutions. Make sure to be detailed in your work.";
-      };
-      chat = {
-        model = "ollama:qwen2.5-coder:7b";
-        temperature = 0.7;
-        instructions = "You are a chatbot, a variety of questions will be asked. Be as detailed and thoughtful as possible in your answer. Listen to everything the user has to say, it is your friend.";
-      };
-    };
-  };
   programs.gemini-cli = {
     enable = true;
   };

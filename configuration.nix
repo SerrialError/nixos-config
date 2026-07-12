@@ -157,13 +157,6 @@ in
   services.displayManager = {
     defaultSession = "none+i3";
   };
-  services.ollama = {
-    enable = true;
-    acceleration = "cuda";
-    package = pkgs.ollama.override {
-      cudaArches = [ "61" ]; # Pascal (GTX 1080 Ti)
-    };
-  };
   # hardware.graphics = {
   # enable = true;                                 # turn on the NixOS OpenGL wrapper system
   # };
