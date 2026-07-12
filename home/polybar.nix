@@ -1,5 +1,18 @@
 { config, pkgs, ... }:
 
+let
+  # Wrap the raw script so it runs under the polybar systemd user service,
+  # which has a minimal PATH (no `bash`/`jq`/`curl`). writeShellApplication
+  # gives it an absolute bash shebang and puts its deps on PATH.
+  polybar-updates = pkgs.writeShellApplication {
+    name = "polybar-updates";
+    runtimeInputs = with pkgs; [
+      jq
+      curl
+    ];
+    text = builtins.readFile ../scripts/polybar-updates.sh;
+  };
+in
 {
   # Required packages
   home.packages = with pkgs; [
@@ -117,9 +130,9 @@
       # Renders nothing when up to date. Polled hourly; click to re-check.
       "module/updates" = {
         type = "custom/script";
-        exec = "$HOME/git/nixos-config/scripts/polybar-updates.sh";
+        exec = "${polybar-updates}/bin/polybar-updates";
         interval = 3600;
-        click-left = "$HOME/git/nixos-config/scripts/polybar-updates.sh";
+        click-left = "${polybar-updates}/bin/polybar-updates";
       };
 
       "module/mpd" = {

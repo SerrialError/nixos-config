@@ -15,7 +15,9 @@ LOCK="$FLAKE_DIR/flake.lock"
 
 locked=$(jq -r '.nodes.nixpkgs.locked.rev' "$LOCK" 2>/dev/null || true)
 ref=$(jq -r '.nodes.nixpkgs.original.ref' "$LOCK" 2>/dev/null || true)
-[ -n "$locked" ] && [ -n "$ref" ] || exit 0
+if [ -z "$locked" ] || [ -z "$ref" ]; then
+  exit 0
+fi
 
 latest=$(curl -fsSL --max-time 8 "https://channels.nixos.org/$ref/git-revision" 2>/dev/null || true)
 # No network / bad response: don't render anything.
