@@ -115,12 +115,6 @@ in
   };
 
   # Unofficial Bitwarden CLI (keeps vault unlocked via rbw-agent, like ssh-agent).
-  # First-time setup after rebuild:
-  #   rbw config set email you@example.com
-  #   rbw config set pinentry pinentry-gtk-2    # GUI; use pinentry-tty for terminal
-  #   rbw register   # only needed with official bitwarden.com (bot protection)
-  #   rbw login && rbw unlock
-  #   rbw get <entry-name>
   programs.rbw.enable = true;
 
   # Cross-shell prompt, gruvbox-themed.
@@ -345,7 +339,7 @@ in
           vim.lsp.config("tinymist", {
             settings = {
               exportPdf = "onSave",
-              outputPath = "$root/$name",
+              outputPath = "$dir/$name",
               formatterMode = "typstyle",
             },
           })
