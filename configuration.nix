@@ -48,6 +48,12 @@ in
     owner = "git";
     mode = "0440"; # Read-only for owner and group
   };
+  # Personal password notes (replaces ~/password.txt). User-readable only.
+  age.secrets.passwords = {
+    file = ./secrets/passwords.age;
+    owner = "connor";
+    mode = "0400";
+  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;

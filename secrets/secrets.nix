@@ -3,4 +3,6 @@ let
 in
 {
   "ssh-auth-keys.age".publicKeys = [ primary ];
+  # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user connor at /run/agenix/passwords.
+  "passwords.age".publicKeys = [ primary ];
 }

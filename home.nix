@@ -101,7 +101,34 @@ in
       gd = "git diff";
       gl = "git log --oneline --graph --decorate";
     };
+    # agenix personal password notes (see age.secrets.passwords)
+    #   pw  — view deployed secret at /run/agenix/passwords
+    #   pws — decrypt passwords.age to stdout (no rebuild needed)
+    #   pwe — edit the encrypted secret (then nrs to redeploy)
+    initContent = ''
+      pw()  { bat /run/agenix/passwords; }
+      pws() {
+        agenix -d "$HOME/git/nixos-config/secrets/passwords.age" \
+          -i "$HOME/.config/sops/age/keys.txt"
+      }
+      pwe() {
+        (
+          cd "$HOME/git/nixos-config/secrets" || return 1
+          RULES=./secrets.nix agenix -e passwords.age \
+            -i "$HOME/.config/sops/age/keys.txt"
+        ) && echo "Saved. Run 'nrs' to refresh /run/agenix/passwords, or 'pws' to read the .age file."
+      }
+    '';
   };
+
+  # Unofficial Bitwarden CLI (keeps vault unlocked via rbw-agent, like ssh-agent).
+  # First-time setup after rebuild:
+  #   rbw config set email you@example.com
+  #   rbw config set pinentry pinentry-gtk-2    # GUI; use pinentry-tty for terminal
+  #   rbw register   # only needed with official bitwarden.com (bot protection)
+  #   rbw login && rbw unlock
+  #   rbw get <entry-name>
+  programs.rbw.enable = true;
 
   # Cross-shell prompt, gruvbox-themed.
   programs.starship = {
