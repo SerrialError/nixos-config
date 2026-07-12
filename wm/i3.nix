@@ -31,6 +31,17 @@ in
         titlebar = false;
         border = 3;
         hideEdgeBorders = "none";
+        commands = [
+          # Zathura lives in the scratchpad: any zathura window is captured,
+          # floated, sized, and shown; toggle it with $mod+Shift+z. i3 centers
+          # scratchpad windows automatically on show, so we don't position here.
+          {
+            criteria = {
+              class = "(?i)zathura";
+            };
+            command = "floating enable, resize set 2000 1250, move scratchpad, scratchpad show";
+          }
+        ];
       };
 
       # Disable i3bar since we're using Polybar
@@ -45,6 +56,7 @@ in
         "${modifier}+Shift+f" = "exec floorp";
         "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/set-random-wallpaper.sh";
         "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/picom-grayscale-toggle.sh";
+        "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show";
       };
 
       # Startup applications
