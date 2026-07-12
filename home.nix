@@ -328,15 +328,44 @@ in
           clang.enable = true;
           typescript.enable = true;
           rust.enable = true;
+          # Typst with tinymist (nvf's default and only typst LSP server)
+          typst.enable = true;
         };
         lsp = {
           enable = true;
           servers = {
             clangd = {
               enable = true;
+              # Resolve clangd from PATH instead of nvf's hardcoded store
+              # path, so nix dev shells can ship a project-specific clangd
+              # (e.g. a cross-compile-aware wrapper for VEX PROS). Outside a
+              # dev shell this falls back to the wrapped clang-tools clangd
+              # from home.packages, preserving host-project behavior.
+              cmd = lib.mkForce [ "clangd" ];
             };
           };
         };
+        # Must run after nvf's "lsp-servers" DAG entry, which does an
+        # overwriting `vim.lsp.config["tinymist"] = ...` assignment; this
+        # vim.lsp.config() call merges our settings on top of it.
+        luaConfigRC.tinymist-export = inputs.nvf.lib.nvim.dag.entryAfter [ "lsp-servers" ] ''
+          vim.lsp.config("tinymist", {
+            settings = {
+              exportPdf = "onSave",
+              outputPath = "$root/$name",
+              formatterMode = "typstyle",
+            },
+          })
+
+          -- pin the root document so editing chapters/03.typ still
+          -- compiles main.typ rather than the fragment
+          vim.keymap.set("n", "<leader>tp", function()
+            vim.lsp.buf.execute_command({
+              command = "tinymist.pinMain",
+              arguments = { vim.api.nvim_buf_get_name(0) },
+            })
+          end, { desc = "Typst: pin main file" })
+        '';
       };
     };
   };
@@ -405,7 +434,15 @@ in
   programs.gemini-cli = {
     enable = true;
   };
-  home.packages = [ pkgs.devenv ];
+  home.packages = [
+    pkgs.devenv
+    # Fallback clangd for nvim (see vim.lsp.servers.clangd.cmd); dev shells
+    # may shadow it with a project-specific wrapper.
+    pkgs.clang-tools
+    # pinentry for rbw. gtk2 package includes pinentry-gtk-2 (GUI) and
+    # pinentry-tty; cannot install pinentry-curses alongside it (same bin paths).
+    pkgs.pinentry-gtk2
+  ];
 
   programs.vinegar.enable = true;
   # Create Rofi theme directory and theme file
