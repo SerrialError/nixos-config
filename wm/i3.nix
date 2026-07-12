@@ -33,13 +33,16 @@ in
         hideEdgeBorders = "none";
         commands = [
           # Zathura lives in the scratchpad: any zathura window is captured,
-          # floated, sized, and shown; toggle it with $mod+Shift+z. i3 centers
-          # scratchpad windows automatically on show, so we don't position here.
+          # floated, sized, and shown; toggle it with $mod+Shift+z.
+          # 920x1300 ~= A4 portrait aspect that fills the 1440p screen height
+          # (minus polybar); "move position center" is explicit because i3's
+          # automatic scratchpad placement drifts off-center here (the primary
+          # output is a disconnected port).
           {
             criteria = {
               class = "(?i)zathura";
             };
-            command = "floating enable, resize set 2000 1250, move scratchpad, scratchpad show";
+            command = "floating enable, resize set 920 1300, move scratchpad, scratchpad show, move position center";
           }
         ];
       };
@@ -56,7 +59,7 @@ in
         "${modifier}+Shift+f" = "exec floorp";
         "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/set-random-wallpaper.sh";
         "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/picom-grayscale-toggle.sh";
-        "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show";
+        "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show, move position center";
       };
 
       # Startup applications
