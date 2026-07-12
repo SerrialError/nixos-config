@@ -220,13 +220,15 @@
         email = "serrialerror@outlook.com";
       };
     };
-    delta = {
-      enable = true;
-      options = {
-        navigate = true;
-        line-numbers = true;
-        side-by-side = false;
-      };
+  };
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true;
+      line-numbers = true;
+      side-by-side = false;
     };
   };
 
@@ -267,10 +269,16 @@
         treesitter = {
           grammars = [ ];
         };
-        # WORKAROUND for nvf rev 63d8fc82d6: its vim.maps -> vim.keymaps
-        # migration shim reads every legacy category unconditionally, and the
-        # legacy options have no defaults, so evaluation fails unless ALL of
-        # them are defined. Delete this whole block after `nix flake update nvf`.
+        # nvf's vim.maps -> vim.keymaps migration shim is buggy: its
+        # `config.vim.keymaps = mkMerge [ (pipe cfg.maps ...) ]` maps over all
+        # vim.maps.* sub-options, which upstream declares WITHOUT a default.
+        # The module system must WHNF that definition just to resolve option
+        # priority, so it forces every category and eval fails unless ALL are
+        # defined here. Defining them is what emits the "vim.maps.* deprecated"
+        # warnings on rebuild -- those are cosmetic and unavoidable until nvf
+        # gives vim.maps.* a `{}` default (no mkForce/keymaps override helps,
+        # the read happens during priority discharge). Latest nvf as of
+        # 2026-07-12 still has this. Revisit after a future nvf update.
         maps = {
           normal = { };
           insert = { };

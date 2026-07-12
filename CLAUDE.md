@@ -17,7 +17,7 @@ sudo nixos-rebuild build --flake /home/connor/git/nixos-config#default --impure
 
 # Update inputs
 nix flake update            # all inputs
-nix flake update nvf        # a single input (see nvf workaround note below)
+nix flake update nvf        # a single input (see nvf note below)
 ```
 
 `--impure` is **required**: `users.users.*.openssh.authorizedKeys.keyFiles` reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time. Rebuilds fail without it.
@@ -43,7 +43,7 @@ Stable `nixos-25.11` is the default. `nixpkgs-unstable` is imported inside `conf
 
 ### Editor
 
-Neovim is managed by **nvf** (`inputs.nvf`), configured under `programs.nvf` in `home.nix` — not raw init.lua. There's a temporary `vim.maps = { ... }` workaround block in that config (a shim bug in the pinned nvf rev); the inline comment says to delete it after `nix flake update nvf`.
+Neovim is managed by **nvf** (`inputs.nvf`), configured under `programs.nvf` in `home.nix` — not raw init.lua. There's a `vim.maps = { ... }` block of empty categories in that config: nvf's `vim.maps` → `vim.keymaps` migration shim reads every `vim.maps.*` sub-option (which upstream declares with no default) while resolving option priority, so eval **fails** unless all categories are defined. Defining them is what emits the "`vim.maps.*` deprecated" warnings on every rebuild — those are cosmetic and cannot be removed from config (verified: `mkForce`/empty-`keymaps` overrides don't help, because the read happens during priority discharge, before overrides apply). Leave the block until a future nvf gives `vim.maps.*` a `{}` default, then it can go.
 
 ## Secrets (agenix)
 
