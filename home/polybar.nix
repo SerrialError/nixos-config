@@ -47,7 +47,7 @@
         separator-foreground = "\${colors.disabled}";
         font-0 = "JetBrainsMono Nerd Font:size=10;2";
         modules-left = "systray xworkspaces xwindow";
-        modules-right = "temperature pulseaudio date";
+        modules-right = "updates temperature pulseaudio date";
         cursor-click = "pointer";
         cursor-scroll = "ns-resize";
         enable-ipc = true;
@@ -111,6 +111,15 @@
         base-temperature = 20;
         warn-temperature = 60;
         label = "%temperature-f%";
+      };
+
+      # Shows " updates" when the nixpkgs channel is ahead of flake.lock.
+      # Renders nothing when up to date. Polled hourly; click to re-check.
+      "module/updates" = {
+        type = "custom/script";
+        exec = "$HOME/git/nixos-config/scripts/polybar-updates.sh";
+        interval = 3600;
+        click-left = "$HOME/git/nixos-config/scripts/polybar-updates.sh";
       };
 
       "module/mpd" = {
