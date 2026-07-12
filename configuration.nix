@@ -14,6 +14,15 @@ let
     system = pkgs.stdenv.hostPlatform.system;
     inherit (config.nixpkgs) config;
   };
+  # Login theme, overridden per the sddm-astronaut NixOS docs. Background
+  # points at a file the sddm-random-background service (below) refreshes
+  # from ~/Pictures/wallpapers on every boot, so the login screen rotates
+  # with the same pool as the in-session wallpaper script.
+  sddm-astronaut = pkgs.sddm-astronaut.override {
+    themeConfig = {
+      Background = "/var/lib/sddm-background/background.png";
+    };
+  };
 in
 {
   imports = [
@@ -149,13 +158,45 @@ in
   services.xserver = {
     enable = true;
     videoDrivers = [ "nvidia" ];
-    displayManager.lightdm.enable = true;
     windowManager.i3.enable = true;
     xkb.layout = "us";
     xkb.variant = "";
   };
   services.displayManager = {
     defaultSession = "none+i3";
+    sddm = {
+      enable = true;
+      package = pkgs.kdePackages.sddm; # theme is Qt6; don't use the Qt5 sddm
+      theme = "sddm-astronaut-theme";
+      extraPackages = [ pkgs.kdePackages.qtmultimedia ]; # required by the theme
+    };
+  };
+
+  # Copy a random wallpaper (jpg/png only — the greeter may lack other image
+  # decoders) to the path the sddm theme reads as its background. Runs as root
+  # before the display manager so it can read the user's Pictures and write
+  # somewhere the sddm greeter can read.
+  systemd.services.sddm-random-background = {
+    description = "Pick a random SDDM login background";
+    wantedBy = [ "display-manager.service" ];
+    before = [ "display-manager.service" ];
+    path = [
+      pkgs.coreutils
+      pkgs.findutils
+    ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      dir=/home/connor/Pictures/wallpapers
+      out=/var/lib/sddm-background
+      [ -d "$dir" ] || exit 0
+      mkdir -p "$out"
+      pick="$(find "$dir" -maxdepth 1 -type f \
+        \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) \
+        ! -iname '*-gray.*' | shuf -n1)"
+      if [ -n "$pick" ]; then
+        install -m 0644 "$pick" "$out/background.png"
+      fi
+    '';
   };
   # hardware.graphics = {
   # enable = true;                                 # turn on the NixOS OpenGL wrapper system
@@ -289,9 +330,8 @@ in
     github-desktop
     pkgs-unstable.grok-cli # only packaged in nixpkgs-unstable
     openrocket
-    libsForQt5.qt5.qtquickcontrols2
     chromium
-    libsForQt5.qt5.qtgraphicaleffects
+    sddm-astronaut # the themeConfig-overridden theme from the let-block above
     pavucontrol
     wineWowPackages.stable
     winetricks
