@@ -316,6 +316,7 @@ in
     obs-studio
     claude-monitor
     heroic
+    ncdu
     fastfetch
     tmux
     gdb
@@ -446,6 +447,9 @@ in
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.login.enableGnomeKeyring = true;
+  # sddm has its own PAM service; without this the keyring isn't unlocked by
+  # the login password and apps prompt "authentication required" after login
+  security.pam.services.sddm.enableGnomeKeyring = true;
 
   # Enable the OpenSSH daemon.
   services.openssh = {

@@ -89,6 +89,9 @@
     #   pws — decrypt passwords.age to stdout (no rebuild needed)
     #   pwe — edit the encrypted secret (then nrs to redeploy)
     initContent = ''
+      # System info splash on every new interactive shell
+      fastfetch
+
       pw()  { bat /run/agenix/passwords; }
       pws() {
         agenix -d "$HOME/git/nixos-config/secrets/passwords.age" \
@@ -325,11 +328,17 @@
         # Must run after nvf's "lsp-servers" DAG entry, which does an
         # overwriting `vim.lsp.config["tinymist"] = ...` assignment; this
         # vim.lsp.config() call merges our settings on top of it.
+        # Settings are applied via workspace/didChangeConfiguration after
+        # server init (nvf enables the server in the same section).
         luaConfigRC.tinymist-export = inputs.nvf.lib.nvim.dag.entryAfter [ "lsp-servers" ] ''
           vim.lsp.config("tinymist", {
             settings = {
               exportPdf = "onSave",
-              outputPath = "$dir/$name",
+              -- Must include $root. `$dir/$name` alone is relative and, when
+              -- $dir is empty (file at project root), becomes `/name.pdf` →
+              -- EACCES. See tinymist PathPattern docs and issue #2400.
+              -- Empty outputPath also works (special-cased next-to-source).
+              outputPath = "$root/$dir/$name",
               formatterMode = "typstyle",
             },
           })
