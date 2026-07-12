@@ -9,7 +9,7 @@ Personal NixOS system configuration as a flake. Single host: `nixosConfiguration
 ## Build / apply
 
 ```bash
-# Apply system + home-manager config (also aliased as the fish abbr `nrs`)
+# Apply system + home-manager config (also aliased as the zsh alias `nrs`)
 sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure
 
 # Preview without switching
@@ -27,12 +27,11 @@ There is no test suite or linter — validation is `nixos-rebuild build` succeed
 ## Architecture
 
 - **`flake.nix`** — inputs and the single `nixosConfigurations.default`. home-manager is wired in as a NixOS module here (not standalone), so `nixos-rebuild` applies both system and user config in one step.
-- **`configuration.nix`** — all system-level config (boot, hardware, services, `environment.systemPackages`, users). Also configures the `home-manager` block.
-- **`home.nix`** — the home-manager entrypoint. Imports the per-topic modules and holds most user program config inline.
-- **`wm/`** (`i3.nix`, `polybar.nix`), **`desktop/`** (`gtk.nix`, `lf.nix`) — topic modules imported by `home.nix`.
+- **`configuration.nix`** — all system-level config (boot, hardware, services, `environment.systemPackages`, users). Also configures the `home-manager` block and the SDDM login screen (`sddm-astronaut` theme; a `sddm-random-background` systemd service copies a random `~/Pictures/wallpapers` image to `/var/lib/sddm-background/background.png` before the display manager starts).
+- **`home.nix`** — the home-manager entrypoint. Imports `home/` and holds most user program config inline.
+- **`home/`** — per-topic home-manager modules (`alacritty.nix`, `gtk.nix`, `i3.nix`, `lf.nix`, `polybar.nix`, `tmux.nix`), all imported via `home/default.nix`. `lf-icons` is the lf nerd-font glyph map deployed by `lf.nix`.
+- **`scripts/`** — shell scripts run by absolute path from the live checkout (i3 keybindings / `xsession.initExtra` reference `$HOME/git/nixos-config/scripts/...`), plus the picom grayscale shader.
 - **`secrets/`** — agenix secrets (`.age` files) and `secrets.nix` (recipient public keys).
-
-Note: `home/` (`default.nix`, `tmux.nix`) is **not imported** by anything — it's dead/legacy. `home.nix` is the live user config.
 
 ### Two nixpkgs channels
 
@@ -54,6 +53,6 @@ Neovim is managed by **nvf** (`inputs.nvf`), configured under `programs.nvf` in 
 
 ## Conventions
 
-- The tree is formatted with **`nixfmt-rfc-style`** (installed in `systemPackages`). Run `nixfmt *.nix wm/*.nix desktop/*.nix home/*.nix` before committing so diffs stay clean.
-- System-wide packages go in `configuration.nix` (`environment.systemPackages`); user-scoped program config goes in `home.nix` or a `wm/`/`desktop/` module.
+- The tree is formatted with **`nixfmt-rfc-style`** (installed in `systemPackages`). Run `nixfmt *.nix home/*.nix` before committing so diffs stay clean.
+- System-wide packages go in `configuration.nix` (`environment.systemPackages`); user-scoped program config goes in `home.nix` or a `home/` module.
 - Theming is Gruvbox dark throughout (nix-colors `gruvbox-dark-medium`, rofi/zathura/nvf all set to match).

@@ -6,7 +6,7 @@
 
 set -eu
 
-SHADER="$HOME/git/nixos-config/grayscale.glsl"
+SHADER="$HOME/git/nixos-config/scripts/grayscale.glsl"
 STATE_FILE_ORIG="${XDG_RUNTIME_DIR:-$HOME/.cache}/feh-current-original"
 PICOM_GRAY_FLAG="${XDG_RUNTIME_DIR:-/tmp}/picom-grayscale"
 PICOM_CMD="picom --backend glx"

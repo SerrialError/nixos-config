@@ -6,23 +6,10 @@
   ...
 }:
 
-let
-  inherit (builtins) readFile;
-  inherit (lib) fileContents;
-  configDir = builtins.path {
-    path = ./.;
-    name = "home-config";
-  };
-in
 {
   imports = [
     inputs.nix-colors.homeManagerModules.default
     inputs.nvf.homeManagerModules.default
-    (import ./alacritty.nix)
-    (import ./wm/i3.nix)
-    (import ./wm/polybar.nix)
-    (import ./desktop/gtk.nix)
-    (import ./desktop/lf.nix)
     ./home
   ];
 
@@ -42,13 +29,16 @@ in
   # home.username = "connor";
   # home.homeDirectory = "/home/connor";
   home.stateVersion = "25.11";
-  home.file."bin/element".text = ''
-    	#!/usr/bin/env bash
-      	eval $(gnome-keyring-daemon --start --components=secrets)
-      	export GNOME_KEYRING_CONTROL
-      	export DBUS_SESSION_BUS_ADDRESS
-      	${pkgs.element-desktop}/bin/element-desktop "$@"
-  '';
+  home.file."bin/element" = {
+    executable = true;
+    text = ''
+      #!/usr/bin/env bash
+      eval $(gnome-keyring-daemon --start --components=secrets)
+      export GNOME_KEYRING_CONTROL
+      export DBUS_SESSION_BUS_ADDRESS
+      ${pkgs.element-desktop}/bin/element-desktop "$@"
+    '';
+  };
 
   # X session configuration
   xsession.enable = true;
@@ -201,7 +191,7 @@ in
     };
   };
 
-  # Python plotting library configuration
+  # Email client configuration
   programs.thunderbird = {
     enable = true;
     settings = {
@@ -477,7 +467,7 @@ in
 
   # Run the wallpaper script (the tracked copy in the repo) when X starts.
   xsession.initExtra = ''
-    $HOME/git/nixos-config/set-random-wallpaper.sh
+    $HOME/git/nixos-config/scripts/set-random-wallpaper.sh
   '';
 
   # Environment variables

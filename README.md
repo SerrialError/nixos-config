@@ -13,6 +13,7 @@ This repository contains my personal NixOS configuration, featuring a customized
   - Volume control
   - Date/time display
 - Custom GTK and Qt theming
+- SDDM login screen (sddm-astronaut theme) with a random wallpaper each boot
 - Random wallpaper selection on startup
 - Neovim configuration with LSP support
 - Various development tools and applications
@@ -47,9 +48,8 @@ reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time.
 - `configuration.nix`: Main NixOS system configuration
 - `home.nix`: Home Manager entrypoint for user-specific settings
 - `hardware-configuration.nix`: Hardware-specific configuration
-- `wm/`: Window manager modules (i3, polybar)
-- `desktop/`: Desktop modules (GTK/Qt theming, lf file manager)
-- `home/`: Additional home-manager modules (tmux)
+- `home/`: Home-manager modules (alacritty, GTK/Qt theming, i3, lf, polybar, tmux)
+- `scripts/`: Wallpaper and picom-grayscale helper scripts (run from the live checkout)
 - Neovim is configured via the `nvf` flake input under `programs.nvf` in `home.nix`
 
 ## Customization
@@ -58,7 +58,7 @@ To customize this configuration:
 
 1. Modify `configuration.nix` for system-wide changes
 2. Edit `home.nix` for user-specific settings
-3. Add or modify modules in the `wm/`, `desktop/`, or `home/` directories
+3. Add or modify modules in the `home/` directory
 
 ## Keybindings
 

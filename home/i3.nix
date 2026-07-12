@@ -57,8 +57,8 @@ in
         "${modifier}+Shift+p" = "exec rofi -show drun";
         "${modifier}+Shift+d" = "exec discord";
         "${modifier}+Shift+f" = "exec floorp";
-        "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/set-random-wallpaper.sh";
-        "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/picom-grayscale-toggle.sh";
+        "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/scripts/set-random-wallpaper.sh";
+        "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/scripts/picom-grayscale-toggle.sh";
         "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show, move position center";
       };
 

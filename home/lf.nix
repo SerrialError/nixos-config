@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  # Nerd-font glyph map for lf's `icons` setting; without this file lf only
+  # shows its plain built-in defaults.
+  xdg.configFile."lf/icons".source = ./lf-icons;
+
   # File manager (lf) configuration
   programs.lf = {
     enable = true;
