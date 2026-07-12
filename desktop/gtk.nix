@@ -65,6 +65,15 @@
     };
   };
 
+  # home-manager generates ~/.config/gtk-4.0/gtk.css importing the theme's
+  # gtk-4.0/gtk.css whenever gtk.theme is set. adw-gtk3's GTK4 CSS is adaptive
+  # (dark colors are inside @media prefers-color-scheme blocks) and that media
+  # query never matches when the sheet is loaded as user CSS, so the import
+  # forces plain-GTK4 apps (e.g. pavucontrol) light. Without the file, GTK4
+  # honors gtk-theme-name + prefer-dark from settings.ini and renders the
+  # theme's dark palette correctly.
+  xdg.configFile."gtk-4.0/gtk.css".enable = false;
+
   # QT theme configuration
   qt = {
     enable = true;
@@ -79,8 +88,9 @@
 
   # Environment variables for consistent theming
   home.sessionVariables = {
-    # GTK theme settings
-    GTK_THEME = "adw-gtk3-dark";
+    # Do NOT set GTK_THEME: for GTK4 it pins the theme's light variant (only
+    # "name:dark" selects gtk-dark.css) and disables prefer-dark handling, so
+    # plain-GTK4 apps render light. Theme names in settings.ini/dconf suffice.
     GTK2_RC_FILES = lib.mkForce "${pkgs.gnome-themes-extra}/share/themes/Adwaita/gtk-2.0/gtkrc:${pkgs.gnome-themes-extra}/share/themes/Adwaita-dark/gtk-2.0/gtkrc";
     GTK_DATA_PREFIX = lib.mkForce "${pkgs.gnome-themes-extra}";
     GTK_USE_PORTAL = "1";
