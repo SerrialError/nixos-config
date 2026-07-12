@@ -64,6 +64,19 @@ in
     mode = "0400";
   };
 
+  # Weekly automatic maintenance so the store doesn't balloon:
+  #  - gc removes generations older than 30 days (keeps recent ones for rollback)
+  #  - optimise hard-links identical store paths to reclaim space
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
+  nix.optimise = {
+    automatic = true;
+    dates = [ "weekly" ];
+  };
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [
