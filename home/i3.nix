@@ -60,6 +60,13 @@ in
         "${modifier}+Shift+n" = "exec $HOME/git/nixos-config/scripts/set-random-wallpaper.sh";
         "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/scripts/picom-grayscale-toggle.sh";
         "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show, move position center";
+        "${modifier}+Shift+m" = "exec alacritty -e ncmpcpp";
+
+        # Media keys drive MPD via playerctl (MPD's MPRIS bridge, mpd-mpris).
+        "XF86AudioPlay" = "exec playerctl play-pause";
+        "XF86AudioNext" = "exec playerctl next";
+        "XF86AudioPrev" = "exec playerctl previous";
+        "XF86AudioStop" = "exec playerctl stop";
       };
 
       # Startup applications

@@ -60,7 +60,7 @@ in
         separator-foreground = "\${colors.disabled}";
         font-0 = "JetBrainsMono Nerd Font:size=10;2";
         modules-left = "systray xworkspaces xwindow";
-        modules-right = "updates temperature pulseaudio date";
+        modules-right = "mpd updates temperature pulseaudio date";
         cursor-click = "pointer";
         cursor-scroll = "ns-resize";
         enable-ipc = true;
@@ -140,7 +140,18 @@ in
         host = "127.0.0.1";
         port = 6600;
         interval = 2;
-        label-song = "%title%";
+        # Falls back to the filename when a track has no tags (e.g. .webm).
+        label-song = "%artist% - %title%";
+        label-song-maxlen = 45;
+        label-song-ellipsis = true;
+        format-online = "<label-song>  <toggle> <icon-prev> <icon-next>";
+        format-online-prefix = " ";
+        format-online-prefix-foreground = "\${colors.primary}";
+        icon-play = "";
+        icon-pause = "";
+        icon-prev = "";
+        icon-next = "";
+        label-offline = "";
       };
     };
   };
