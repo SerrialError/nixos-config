@@ -67,13 +67,6 @@ in
     };
   };
 
-  programs.fish = {
-    enable = true;
-    shellAbbrs = {
-      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure";
-    };
-  };
-
   # zsh is the primary interactive shell (see users.users.connor.shell).
   programs.zsh = {
     enable = true;
