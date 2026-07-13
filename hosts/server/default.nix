@@ -83,6 +83,11 @@
     };
   };
 
+  # The blocky module Wants network-online.target but doesn't order After it,
+  # so at boot the blocklist download races the network and silently fails,
+  # leaving DNS unfiltered until the next refresh (hours later).
+  systemd.services.blocky.after = [ "network-online.target" ];
+
   # 80/443 for Caddy, 53 for Blocky. SSH (22) is opened by the openssh
   # module itself. Nothing else.
   networking.firewall.allowedTCPPorts = [
