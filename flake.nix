@@ -27,10 +27,11 @@
       ...
     }@inputs:
     {
+      # Desktop — keep the output name `default`, the nrb/nrs aliases use it.
       nixosConfigurations.default = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
         modules = [
-          ./configuration.nix
+          ./hosts/desktop
           inputs.home-manager.nixosModules.default
         ];
       };

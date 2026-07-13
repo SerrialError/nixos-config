@@ -28,8 +28,9 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    # home-manager module is already imported via flake.nix's modules list
-    inputs.agenix.nixosModules.default
+    # home-manager module is already imported via flake.nix's modules list;
+    # agenix wiring, locale/tz, base packages, connor user, sshd baseline:
+    ../../modules/common.nix
   ];
   # Add additional storage mounts
   fileSystems."/mnt/storage" = {
@@ -52,33 +53,19 @@ in
     ];
   };
   age.identityPaths = [ "/home/connor/.config/sops/age/keys.txt" ];
+  # secret file itself is declared in modules/common.nix; the desktop shares
+  # it with the git-shell user
   age.secrets.ssh-auth-keys = {
-    file = ./secrets/ssh-auth-keys.age;
     owner = "git";
     mode = "0440"; # Read-only for owner and group
   };
   # Personal password notes (replaces ~/password.txt). User-readable only.
   age.secrets.passwords = {
-    file = ./secrets/passwords.age;
+    file = ../../secrets/passwords.age;
     owner = "connor";
     mode = "0400";
   };
 
-  # Weekly automatic maintenance so the store doesn't balloon:
-  #  - gc removes generations older than 30 days (keeps recent ones for rollback)
-  #  - optimise hard-links identical store paths to reclaim space
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
-  };
-  nix.optimise = {
-    automatic = true;
-    dates = [ "weekly" ];
-  };
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [
     "electron-36.9.5"
     "electron-39.8.10"
@@ -128,23 +115,6 @@ in
     configPackages = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
-  # Set your time zone.
-  time.timeZone = "America/Los_Angeles";
-
-  # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
-
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "en_US.UTF-8";
-    LC_IDENTIFICATION = "en_US.UTF-8";
-    LC_MEASUREMENT = "en_US.UTF-8";
-    LC_MONETARY = "en_US.UTF-8";
-    LC_NAME = "en_US.UTF-8";
-    LC_NUMERIC = "en_US.UTF-8";
-    LC_PAPER = "en_US.UTF-8";
-    LC_TELEPHONE = "en_US.UTF-8";
-    LC_TIME = "en_US.UTF-8";
-  };
   security.rtkit.enable = true;
   services.printing = {
     enable = true;
@@ -267,18 +237,14 @@ in
     };
   };
 
+  # base user (isNormalUser, zsh, wheel, authorized keys) comes from
+  # modules/common.nix; desktop-only groups and description here
   users.users.connor = {
-    isNormalUser = true;
     description = "connor-pc";
-    shell = pkgs.zsh;
     extraGroups = [
       "networkmanager"
-      "wheel"
       "docker"
       "libvirtd"
-    ];
-    openssh.authorizedKeys.keyFiles = [
-      config.age.secrets.ssh-auth-keys.path
     ];
   };
   users.users.nixosvmtest = {
@@ -298,8 +264,8 @@ in
     useUserPackages = true; # install HM packages via /etc/profiles (standard on NixOS)
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "connor" = import ./home.nix;
-      "nixosvmtest" = import ./home.nix;
+      "connor" = import ../../home.nix;
+      "nixosvmtest" = import ../../home.nix;
     };
     backupFileExtension = "backup";
   };
@@ -316,9 +282,6 @@ in
     obs-studio
     claude-monitor
     heroic
-    ncdu
-    fastfetch
-    tmux
     gdb
     polkit_gnome
     gimp
@@ -333,7 +296,6 @@ in
     obsidian
     libsecret
     gnome-keyring
-    unzip
     docker-compose
     qemu
     lxappearance
@@ -354,7 +316,6 @@ in
     paraview
     mpi
     alsa-utils
-    curlFull
     networkmanagerapplet
     blueman
     nlohmann_json
@@ -364,7 +325,6 @@ in
     gcc-arm-embedded
     hugo
     dnsmasq
-    killall
     go
     mpv
     nitch
@@ -383,9 +343,6 @@ in
       withOpenASAR = true;
       withVencord = true;
     })
-    rsync
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
     mangohud
     xclip # Add xclip for clipboard support
     rofi # Add rofi for application launcher
@@ -398,14 +355,11 @@ in
     btop-cuda
     mesa-demos
 
-    # CLI essentials
-    ripgrep # fast grep; required for nvf/telescope live-grep
-    fd
+    # CLI essentials (ripgrep/fd/jq etc. live in modules/common.nix)
     fzf
     zoxide
     eza
     bat
-    jq
 
     # Git / dev workflow
     lazygit
@@ -442,7 +396,6 @@ in
   programs.seahorse.enable = true;
 
   programs.virt-manager.enable = true;
-  programs.zsh.enable = true;
 
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
@@ -451,21 +404,16 @@ in
   # the login password and apps prompt "authentication required" after login
   security.pam.services.sddm.enableGnomeKeyring = true;
 
-  # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    # Key-based auth only; authorized keys are deployed via agenix.
-    settings.PasswordAuthentication = false;
-    settings.KbdInteractiveAuthentication = false;
-    extraConfig = ''
-      Match user git
-      AllowTcpForwarding no
-      AllowAgentForwarding no
-      PasswordAuthentication no
-      PermitTTY no
-      X11Forwarding no
-    '';
-  };
+  # OpenSSH baseline (enable, key-only auth) comes from modules/common.nix;
+  # the desktop only adds the git-shell restrictions.
+  services.openssh.extraConfig = ''
+    Match user git
+    AllowTcpForwarding no
+    AllowAgentForwarding no
+    PasswordAuthentication no
+    PermitTTY no
+    X11Forwarding no
+  '';
   services.dbus.enable = true;
   services.gvfs.enable = true; # Mount, trash, and other functionalities
   services.tumbler.enable = true; # Thumbnail support for images
