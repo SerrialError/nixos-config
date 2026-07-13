@@ -35,6 +35,15 @@
           inputs.home-manager.nixosModules.default
         ];
       };
+
+      # Home server (headless laptop): Caddy, Vaultwarden, Blocky.
+      nixosConfigurations.server = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/server
+        ];
+      };
     };
 
 }
