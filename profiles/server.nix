@@ -8,5 +8,5 @@
   networking.firewall.enable = true;
 
   # It's a laptop acting as a server — closing the lid must not suspend it.
-  services.logind.lidSwitch = "ignore";
+  services.logind.settings.Login.HandleLidSwitch = "ignore";
 }
