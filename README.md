@@ -64,25 +64,43 @@ reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time.
 
 ## Server: one-time bootstrap
 
-1. Install NixOS on the laptop from the minimal ISO (partition, `nixos-install`
-   with a throwaway config is fine). Make sure `services.openssh` is enabled
-   and your key is authorized so you can reach it.
+Dress-rehearsed against a quickemu VM on the `vm-test` branch; the numbers
+below are the order that worked.
+
+1. Install NixOS on the laptop from the **25.11** minimal ISO (partition,
+   `nixos-install` with a throwaway config is fine — but match the release:
+   live-switching across a systemd major version wedges
+   `switch-to-configuration`). Make sure `services.openssh` is enabled and
+   your key is authorized **for root as well as connor** — the first deploy
+   has to run as `root@` (see step 6).
 2. On the laptop: `nixos-generate-config` and copy the resulting
    `hardware-configuration.nix` over `hosts/server/hardware-configuration.nix`
    in this repo (replace the placeholder entirely). Check that
    `boot.loader.grub.device` in `hosts/server/default.nix` matches the install
-   disk.
+   disk (and switch to systemd-boot instead if the machine boots EFI).
 3. Grab the server's host key: `cat /etc/ssh/ssh_host_ed25519_key.pub`, paste
    it as the `server` recipient in `secrets/secrets.nix`, add `server` to the
    `publicKeys` of `ssh-auth-keys.age` and `vaultwarden-env.age`, then rekey:
    `cd secrets && agenix -r`.
 4. Create the Vaultwarden secret: `cd secrets && agenix -e vaultwarden-env.age`
-   with content `ADMIN_TOKEN=<random long string>`, then uncomment the
+   (interactively — scripted `EDITOR`s corrupt the payload) with content
+   `ADMIN_TOKEN=<random long string>`, then uncomment the
    `age.secrets.vaultwarden-env` block in `hosts/server/default.nix`.
 5. Replace the placeholders: `PLACEHOLDER-DOMAIN` (Caddy/Vaultwarden domains,
    in `hosts/server/default.nix`) and `SERVER-IP-PLACEHOLDER` (the `srs` alias
    in `home.nix`).
-6. First deploy from the desktop: `srs` (see below).
+6. First deploy from the desktop **as root**, activating via `boot` + reboot
+   rather than a live switch (`nix.settings.trusted-users` isn't live yet, so
+   a `connor@` push is rejected as unsigned; and a live switch drops the SSH
+   session mid-activation):
+
+   ```bash
+   sudo --preserve-env=SSH_AUTH_SOCK nixos-rebuild boot \
+     --flake .#server --impure --target-host root@<server-ip>
+   ssh root@<server-ip> reboot
+   ```
+7. Every later deploy is just `srs` (see below); root SSH is disabled from now
+   on by `profiles/server.nix`.
 
 ## Deploying
 
@@ -91,7 +109,7 @@ From the desktop checkout:
 - `nrb` / `nrs` — build / switch the desktop (`.#default`)
 - `srb` — build the server closure locally (`.#server`)
 - `srs` — build + deploy to the server over SSH
-  (`--target-host connor@… --use-remote-sudo`)
+  (`--target-host connor@… --sudo --ask-sudo-password`)
 
 `--impure` (baked into the aliases) is required because authorized SSH keys
 are read from the agenix-decrypted `/run/agenix/ssh-auth-keys` at eval time —

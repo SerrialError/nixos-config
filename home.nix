@@ -81,7 +81,7 @@
       # keeps connor's ssh-agent usable for the remote hop. Replace
       # SERVER-IP-PLACEHOLDER with the server's LAN address.
       srb = "sudo nixos-rebuild build --flake /home/connor/git/nixos-config#server --impure |& nom";
-      srs = "sudo --preserve-env=SSH_AUTH_SOCK nixos-rebuild switch --flake /home/connor/git/nixos-config#server --impure --target-host connor@SERVER-IP-PLACEHOLDER --use-remote-sudo";
+      srs = "sudo --preserve-env=SSH_AUTH_SOCK nixos-rebuild switch --flake /home/connor/git/nixos-config#server --impure --target-host connor@SERVER-IP-PLACEHOLDER --sudo --ask-sudo-password";
       ls = "eza --icons --group-directories-first";
       ll = "eza -l --icons --git --group-directories-first";
       la = "eza -la --icons --git --group-directories-first";
