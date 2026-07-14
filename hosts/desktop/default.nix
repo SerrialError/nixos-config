@@ -78,13 +78,22 @@ in
     owner = "connor";
     mode = "0400";
   };
-  # Offer the laptop identities in addition to the desktop's own default keys.
+  # Offer the laptop identities only to the home server, which trusts them.
+  # Scoped to a Host block (not global) so they aren't tried against every
+  # host — a global IdentityFile forces ssh to decrypt the passphrased RSA
+  # key just to derive its public key on unrelated connections like GitHub.
   # Set via extraConfig so the runtime /run/agenix paths stay plain strings —
   # the path-typed knownHostsFiles/IdentityFile options would try to import them
   # into the store at eval, before agenix has deployed them.
+  # The trailing `Host *` resets scope: NixOS prepends extraConfig to
+  # ssh_config, so without it the generated lines that follow (e.g. the
+  # libvirt ssh-proxy Include) would be captured by the Host block above.
   programs.ssh.extraConfig = ''
-    IdentityFile ${config.age.secrets.laptop-id-ed25519.path}
-    IdentityFile ${config.age.secrets.laptop-id-rsa.path}
+    Host SERVER-IP-PLACEHOLDER
+      IdentityFile ${config.age.secrets.laptop-id-ed25519.path}
+      IdentityFile ${config.age.secrets.laptop-id-rsa.path}
+
+    Host *
   '';
 
   nixpkgs.config.permittedInsecurePackages = [
