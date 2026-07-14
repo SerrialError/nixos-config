@@ -65,33 +65,17 @@ in
     owner = "connor";
     mode = "0400";
   };
-  # Laptop SSH identity (serrialerror@outlook.com). Deployed to /run/agenix so
-  # the desktop's own ~/.ssh/id_ed25519 is left untouched; offered as extra
-  # IdentityFiles below.
-  age.secrets.laptop-id-ed25519 = {
-    file = ../../secrets/laptop-id-ed25519.age;
-    owner = "connor";
-    mode = "0400";
-  };
-  age.secrets.laptop-id-rsa = {
-    file = ../../secrets/laptop-id-rsa.age;
-    owner = "connor";
-    mode = "0400";
-  };
-  # Offer the laptop identities only to the home server, which trusts them.
-  # Scoped to a Host block (not global) so they aren't tried against every
-  # host — a global IdentityFile forces ssh to decrypt the passphrased RSA
-  # key just to derive its public key on unrelated connections like GitHub.
-  # Set via extraConfig so the runtime /run/agenix paths stay plain strings —
-  # the path-typed knownHostsFiles/IdentityFile options would try to import them
-  # into the store at eval, before agenix has deployed them.
+  # Dedicated key for deploying to / logging into the home server, generated
+  # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
+  # server Host block so it isn't offered to unrelated hosts like GitHub;
+  # IdentitiesOnly stops ssh from also trying the desktop's default key here.
   # The trailing `Host *` resets scope: NixOS prepends extraConfig to
   # ssh_config, so without it the generated lines that follow (e.g. the
   # libvirt ssh-proxy Include) would be captured by the Host block above.
   programs.ssh.extraConfig = ''
     Host 192.168.1.245
-      IdentityFile ${config.age.secrets.laptop-id-ed25519.path}
-      IdentityFile ${config.age.secrets.laptop-id-rsa.path}
+      IdentityFile ~/.ssh/id_server_ed25519
+      IdentitiesOnly yes
 
     Host *
   '';

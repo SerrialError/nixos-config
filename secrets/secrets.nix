@@ -1,24 +1,28 @@
 let
   primary = "age1k4xkk6zkzutch2jxg935wm55q92uvs4ql9czcgnpn6mrnpxs0ghqzgjvmd";
-  # TODO(bootstrap): after installing NixOS on the server, paste its host key
-  # here (`cat /etc/ssh/ssh_host_ed25519_key.pub` on the server — agenix
-  # accepts ssh-ed25519 keys directly), add `server` to the publicKeys lists
-  # below, then rekey from this directory: `agenix -r`.
-  # server = "ssh-ed25519 AAAA... root@server";
+  # Home server host key (`cat /etc/ssh/ssh_host_ed25519_key.pub` on the
+  # server). agenix accepts ssh-ed25519 keys directly; the server decrypts its
+  # secrets at activation with the matching host private key.
+  server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA3qLEFR4AVnU8/CaJY4E+r7vlrWh88bemK5Cn2/3oHp root@nixos";
 in
 {
-  # Once the server key exists, this needs it too (the server decrypts it at
-  # activation for authorized_keys): publicKeys = [ primary server ];
-  "ssh-auth-keys.age".publicKeys = [ primary ];
+  # Authorized SSH keys, decrypted on every host for connor's authorized_keys
+  # (and the git user on the desktop). The server needs it too.
+  "ssh-auth-keys.age".publicKeys = [
+    primary
+    server
+  ];
   # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user connor at /run/agenix/passwords.
   "passwords.age".publicKeys = [ primary ];
-  # SSH client private keys from the laptop (serrialerror@outlook.com identity),
-  # used as extra ssh IdentityFiles on the desktop so it can auth to hosts that
-  # trust the laptop key. Deployed to /run/agenix/laptop-id-* at mode 0400.
-  "laptop-id-ed25519.age".publicKeys = [ primary ];
-  "laptop-id-rsa.age".publicKeys = [ primary ];
-  # Vaultwarden env file (ADMIN_TOKEN=...). Create with `agenix -e
-  # vaultwarden-env.age` after adding the server key; then uncomment the
-  # age.secrets block in hosts/server/default.nix.
-  "vaultwarden-env.age".publicKeys = [ primary ];
+  # Vaultwarden env file (ADMIN_TOKEN=...), decrypted on the server.
+  "vaultwarden-env.age".publicKeys = [
+    primary
+    server
+  ];
+  # Cloudflare API token for Caddy's ACME DNS-01 challenge, decrypted on the
+  # server as caddy's EnvironmentFile.
+  "cloudflare-api-token.age".publicKeys = [
+    primary
+    server
+  ];
 }
