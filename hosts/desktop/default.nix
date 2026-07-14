@@ -65,6 +65,27 @@ in
     owner = "connor";
     mode = "0400";
   };
+  # Laptop SSH identity (serrialerror@outlook.com). Deployed to /run/agenix so
+  # the desktop's own ~/.ssh/id_ed25519 is left untouched; offered as extra
+  # IdentityFiles below.
+  age.secrets.laptop-id-ed25519 = {
+    file = ../../secrets/laptop-id-ed25519.age;
+    owner = "connor";
+    mode = "0400";
+  };
+  age.secrets.laptop-id-rsa = {
+    file = ../../secrets/laptop-id-rsa.age;
+    owner = "connor";
+    mode = "0400";
+  };
+  # Offer the laptop identities in addition to the desktop's own default keys.
+  # Set via extraConfig so the runtime /run/agenix paths stay plain strings —
+  # the path-typed knownHostsFiles/IdentityFile options would try to import them
+  # into the store at eval, before agenix has deployed them.
+  programs.ssh.extraConfig = ''
+    IdentityFile ${config.age.secrets.laptop-id-ed25519.path}
+    IdentityFile ${config.age.secrets.laptop-id-rsa.path}
+  '';
 
   nixpkgs.config.permittedInsecurePackages = [
     "electron-36.9.5"
@@ -106,13 +127,17 @@ in
   ];
   # Enable Flatpak
   services.flatpak.enable = true;
+  # i3 is not a full DE, so portal routing must be named explicitly.
+  # `*` (= first matching backend) works with only gtk installed, but `gtk`
+  # is the recommended value for a single-backend setup (portals.conf(5)).
+  # NetworkMonitor is implemented by the xdg-desktop-portal *frontend* itself
+  # (not gtk/kde) and is only used by sandboxed apps; native apps use GLib's
+  # GNetworkMonitor → NetworkManager. Do not set GTK_USE_PORTAL=0 to "fix"
+  # portal issues — that env is intentional (see home/gtk.nix).
   xdg.portal = {
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    config = {
-      common.default = "*";
-    };
-    configPackages = [ pkgs.xdg-desktop-portal-gtk ];
+    config.common.default = "gtk";
   };
 
   security.rtkit.enable = true;
@@ -291,6 +316,8 @@ in
     kitty
     libnotify
     feh
+    qimgv
+    caligula # TUI disk imager (local ISO → USB); prefer over Impression
     mupdf
     protonup-ng
     obsidian

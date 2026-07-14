@@ -12,6 +12,11 @@ in
   "ssh-auth-keys.age".publicKeys = [ primary ];
   # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user connor at /run/agenix/passwords.
   "passwords.age".publicKeys = [ primary ];
+  # SSH client private keys from the laptop (serrialerror@outlook.com identity),
+  # used as extra ssh IdentityFiles on the desktop so it can auth to hosts that
+  # trust the laptop key. Deployed to /run/agenix/laptop-id-* at mode 0400.
+  "laptop-id-ed25519.age".publicKeys = [ primary ];
+  "laptop-id-rsa.age".publicKeys = [ primary ];
   # Vaultwarden env file (ADMIN_TOKEN=...). Create with `agenix -e
   # vaultwarden-env.age` after adding the server key; then uncomment the
   # age.secrets block in hosts/server/default.nix.

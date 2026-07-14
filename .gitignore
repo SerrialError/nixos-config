@@ -1,1 +1,9 @@
 result
+
+# Never commit plaintext SSH/private keys — encrypt them with agenix instead
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.pem
+known_hosts
