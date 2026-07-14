@@ -89,7 +89,7 @@ in
   # ssh_config, so without it the generated lines that follow (e.g. the
   # libvirt ssh-proxy Include) would be captured by the Host block above.
   programs.ssh.extraConfig = ''
-    Host SERVER-IP-PLACEHOLDER
+    Host 192.168.1.245
       IdentityFile ${config.age.secrets.laptop-id-ed25519.path}
       IdentityFile ${config.age.secrets.laptop-id-rsa.path}
 
