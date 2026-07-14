@@ -42,6 +42,12 @@
 
   # X session configuration
   xsession.enable = true;
+  # home-manager's default import list omits PATH. DBus-activatable apps
+  # launched from rofi (GDesktopAppInfo) inherit the systemd --user
+  # environment, which otherwise only has systemd's own bindir — so
+  # Impression can't find `tar` and shows a false "No Connection" screen.
+  # (CLI launches inherit the shell PATH and work.)
+  xsession.importedVariables = [ "PATH" ];
 
   # XDG user directories configuration
   xdg = {
@@ -55,6 +61,56 @@
       pictures = "$HOME/Pictures";
       videos = "$HOME/Videos";
     };
+
+    # Declarative default apps. home-manager takes over ~/.config/mimeapps.list
+    # (the old mutable copy is saved as mimeapps.list.backup). Images previously
+    # resolved to chromium because its desktop file registers image types;
+    # pin them to qimgv here so thunar/lf/xdg-open all agree.
+    mimeApps =
+      let
+        images = builtins.listToAttrs (
+          map
+            (t: {
+              name = t;
+              value = "qimgv.desktop";
+            })
+            [
+              "image/jpeg"
+              "image/png"
+              "image/gif"
+              "image/bmp"
+              "image/webp"
+              "image/tiff"
+            ]
+        );
+        browser = builtins.listToAttrs (
+          map
+            (t: {
+              name = t;
+              value = "floorp.desktop";
+            })
+            [
+              "text/html"
+              "application/xhtml+xml"
+              "x-scheme-handler/http"
+              "x-scheme-handler/https"
+            ]
+        );
+      in
+      {
+        enable = true;
+        defaultApplications =
+          images
+          // browser
+          // {
+            "application/pdf" = "org.pwmt.zathura.desktop";
+            "video/webm" = "mpv.desktop";
+            "video/mp4" = "mpv.desktop";
+            "video/x-matroska" = "mpv.desktop";
+            "x-scheme-handler/mailto" = "thunderbird.desktop";
+            "message/rfc822" = "thunderbird.desktop";
+          };
+      };
   };
 
   # zsh is the primary interactive shell (see users.users.connor.shell).
@@ -304,13 +360,14 @@
           name = "gruvbox";
           style = "dark";
         };
-        /*
-          luaConfigRC.myIndentation = ''
-          				vim.opt.expandtab = false
-          				vim.opt.shiftwidth = 4
-          				vim.opt.tabstop = 4
-          			'';
-        */
+        # 4-space indentation (nvf/neovim default tabstop is 8).
+        options = {
+          expandtab = true;
+          tabstop = 4;
+          shiftwidth = 4;
+          softtabstop = 4;
+        };
+
         clipboard.enable = true;
         clipboard.providers.xclip.enable = true;
         clipboard.registers = "unnamedplus";

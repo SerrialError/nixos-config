@@ -33,6 +33,7 @@
     };
     gtk2.configLocation = "${config.xdg.configHome}/gtk-2.0/gtkrc";
     gtk3.extraConfig = {
+      # Plain GTK3 honors this; libadwaita/GTK4 do not (see gtk4 below).
       gtk-application-prefer-dark-theme = true;
       gtk-theme-name = "adw-gtk3-dark";
       gtk-icon-theme-name = "Papirus-Dark";
@@ -50,7 +51,9 @@
       gtk-xft-rgba = "rgb";
     };
     gtk4.extraConfig = {
-      gtk-application-prefer-dark-theme = true;
+      # Do not set gtk-application-prefer-dark-theme here: libadwaita logs
+      # Adwaita-WARNING and wants AdwStyleManager / the Settings portal
+      # (we set org.gnome.desktop.interface color-scheme = prefer-dark above).
       gtk-theme-name = "adw-gtk3-dark";
       gtk-icon-theme-name = "Papirus-Dark";
       gtk-cursor-theme-name = "Bibata-Modern-Ice";
@@ -93,6 +96,10 @@
     # plain-GTK4 apps render light. Theme names in settings.ini/dconf suffice.
     GTK2_RC_FILES = lib.mkForce "${pkgs.gnome-themes-extra}/share/themes/Adwaita/gtk-2.0/gtkrc:${pkgs.gnome-themes-extra}/share/themes/Adwaita-dark/gtk-2.0/gtkrc";
     GTK_DATA_PREFIX = lib.mkForce "${pkgs.gnome-themes-extra}";
+    # Prefer xdg-desktop-portal for GTK native file choosers / related APIs
+    # on non-GNOME (i3). Side effect: ashpd treats this as "sandboxed", so
+    # apps like Impression log sandbox + clear cached ISOs on each start —
+    # that is an ashpd/app quirk, not a portal misconfiguration.
     GTK_USE_PORTAL = "1";
     GTK_MODULES = "gail:atk-bridge";
 
