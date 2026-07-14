@@ -12,6 +12,11 @@ let
     ];
     text = builtins.readFile ../scripts/polybar-updates.sh;
   };
+  # Calls nvidia-smi by absolute system-profile path, so no runtimeInputs.
+  polybar-gputemp = pkgs.writeShellApplication {
+    name = "polybar-gputemp";
+    text = builtins.readFile ../scripts/polybar-gputemp.sh;
+  };
 in
 {
   # Required packages
@@ -60,7 +65,7 @@ in
         separator-foreground = "\${colors.disabled}";
         font-0 = "JetBrainsMono Nerd Font:size=10;2";
         modules-left = "systray xworkspaces xwindow";
-        modules-right = "mpd updates temperature pulseaudio date";
+        modules-right = "mpd updates temperature gputemp pulseaudio date";
         cursor-click = "pointer";
         cursor-scroll = "ns-resize";
         enable-ipc = true;
@@ -123,11 +128,20 @@ in
         zone-type = "x86_pkg_temp";
         base-temperature = 20;
         warn-temperature = 60;
-        label = "%temperature-f%";
+        # Pin both normal and warn labels to Fahrenheit — label-warn defaults
+        # to Celsius, which caused the F/C flip once the CPU crossed 60C.
+        label = "CPU %temperature-f%";
+        label-warn = "CPU %temperature-f%";
       };
 
-      # Shows " updates" when the nixpkgs channel is ahead of flake.lock.
-      # Renders nothing when up to date. Polled hourly; click to re-check.
+      "module/gputemp" = {
+        type = "custom/script";
+        exec = "${polybar-gputemp}/bin/polybar-gputemp";
+        interval = 5;
+      };
+
+      # Shows " updates" when the nixpkgs channel is ahead of flake.lock,
+      # or a green checkmark when up to date. Polled hourly; click to re-check.
       "module/updates" = {
         type = "custom/script";
         exec = "${polybar-updates}/bin/polybar-updates";

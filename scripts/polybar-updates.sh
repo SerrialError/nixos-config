@@ -24,7 +24,8 @@ latest=$(curl -fsSL --max-time 8 "https://channels.nixos.org/$ref/git-revision" 
 [ -n "$latest" ] || exit 0
 
 if [ "$locked" = "$latest" ]; then
-  # Up to date — render nothing to keep the bar clean.
+  # Up to date — plain text so the widget is visibly present/healthy.
+  echo "%{F#B5BD68}Up to Date%{F-}"
   exit 0
 fi
 
