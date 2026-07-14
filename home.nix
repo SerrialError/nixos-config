@@ -167,6 +167,45 @@
             -i "$HOME/.config/sops/age/keys.txt"
         ) && echo "Saved. Run 'nrs' to refresh /run/agenix/passwords, or 'pws' to read the .age file."
       }
+
+      # caligula ships no zsh completion and has no `completions` generator
+      # subcommand, so its subcommands/flags don't tab-complete out of the box.
+      # Hand-rolled from `caligula --help` / `caligula burn --help`.
+      _caligula() {
+        local curcontext="$curcontext" state line
+        _arguments -C \
+          '(-h --help)'{-h,--help}'[Print help]' \
+          '(-V --version)'{-V,--version}'[Print version]' \
+          '1: :->cmd' \
+          '*:: :->args'
+        case $state in
+          cmd)
+            _values 'caligula command' \
+              'burn[Burn an image to a disk]' \
+              'help[Print help for a subcommand]'
+            ;;
+          args)
+            case $line[1] in
+              burn)
+                _arguments \
+                  '-o[Where to write the output]:output:_files' \
+                  '(-z --compression)'{-z,--compression}'[Input compression format]:format:(ask auto none gz bz2 xz lz4 zst)' \
+                  '(-s --hash)'{-s,--hash}'[Hash of the input file]:hash:' \
+                  '--hash-file[Where to look for the hash]:file:_files' \
+                  '--hash-of[Is the hash of the raw or compressed file]:kind:(raw compressed)' \
+                  '--show-all-disks[Show all disks, removable or not]' \
+                  '--interactive[Run in interactive mode or not]:mode:(auto always never)' \
+                  '(-f --force)'{-f,--force}'[Do not confirm before destroying the disk]' \
+                  '--root[Try to become root for the output file]:policy:(ask always never)' \
+                  '(-h --help)'{-h,--help}'[Print help]' \
+                  '(-V --version)'{-V,--version}'[Print version]' \
+                  '1:image:_files'
+                ;;
+            esac
+            ;;
+        esac
+      }
+      compdef _caligula caligula
     '';
   };
 
