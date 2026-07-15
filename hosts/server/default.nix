@@ -55,7 +55,13 @@
     enable = true;
     config = {
       DOMAIN = "https://vault.jumpsquad.org";
+      # No open registration, but anyone with a @jumpsquad.org address may
+      # register: SIGNUPS_DOMAINS_WHITELIST permits those domains even while
+      # SIGNUPS_ALLOWED is false.
       SIGNUPS_ALLOWED = false;
+      SIGNUPS_DOMAINS_WHITELIST = "jumpsquad.org";
+      # Only this account may create organizations (comma-separated list).
+      ORG_CREATION_USERS = "contact@jumpsquad.org";
       ROCKET_ADDRESS = "127.0.0.1";
       ROCKET_PORT = 8222;
     };

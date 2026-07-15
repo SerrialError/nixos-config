@@ -14,11 +14,15 @@ in
   ];
   # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user connor at /run/agenix/passwords.
   "passwords.age".publicKeys = [ primary ];
-  # Vaultwarden env file (ADMIN_TOKEN=...), decrypted on the server.
+  # Vaultwarden env file (ADMIN_TOKEN=<argon2id hash>), decrypted on the server.
   "vaultwarden-env.age".publicKeys = [
     primary
     server
   ];
+  # Plaintext of the Vaultwarden admin-panel password (its argon2id hash lives
+  # in vaultwarden-env). Desktop-only: never deployed to a host, kept only so
+  # the login password is recoverable via `agenix -d` / `age -d`.
+  "vaultwarden-admin-password.age".publicKeys = [ primary ];
   # Cloudflare API token for Caddy's ACME DNS-01 challenge, decrypted on the
   # server as caddy's EnvironmentFile.
   "cloudflare-api-token.age".publicKeys = [
