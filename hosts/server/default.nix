@@ -75,6 +75,13 @@
     backupDir = "/var/backup/vaultwarden";
   };
   age.secrets.vaultwarden-env.file = ../../secrets/vaultwarden-env.age;
+  # agenix re-decrypts the secret on activation, but nixos-rebuild only
+  # restarts vaultwarden when its *unit* changes — so a secret-only rotation
+  # (e.g. a new ADMIN_TOKEN) leaves the service running the stale value.
+  # Tie a restart to the ciphertext hash so rotations actually take effect.
+  systemd.services.vaultwarden.restartTriggers = [
+    (builtins.hashFile "sha256" ../../secrets/vaultwarden-env.age)
+  ];
 
   ############################################################################
   # Blocky — DNS ad/tracker blocking for the LAN, listening on :53.
