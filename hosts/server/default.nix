@@ -1,5 +1,5 @@
-# Home server: old x86_64 laptop running the website, Vaultwarden and
-# Blocky behind Caddy. Deployed from the desktop (see README).
+# Home server: old x86_64 laptop running Vaultwarden and Blocky behind
+# Caddy. Deployed from the desktop (see README).
 { config, pkgs, ... }:
 
 {
@@ -19,7 +19,7 @@
   boot.loader.grub.device = "/dev/sda";
 
   ############################################################################
-  # Caddy — TLS-terminating reverse proxy / static site host.
+  # Caddy — TLS-terminating reverse proxy for Vaultwarden.
   #
   # jumpsquad.org sits behind Cloudflare (proxied / orange-cloud), so the home
   # IP never appears in public DNS. Certs are issued over the ACME DNS-01
@@ -38,11 +38,7 @@
     globalConfig = ''
       acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
     '';
-    # Static website; drop the site files into /var/www/site.
-    virtualHosts."jumpsquad.org".extraConfig = ''
-      root * /var/www/site
-      file_server
-    '';
+    # Only Vaultwarden is served; no static site is hosted on this machine.
     virtualHosts."vault.jumpsquad.org".extraConfig = ''
       reverse_proxy 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
     '';
