@@ -69,12 +69,16 @@ in
   # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
   # server Host block so it isn't offered to unrelated hosts like GitHub;
   # IdentitiesOnly stops ssh from also trying the desktop's default key here.
+  # Absolute path (not ~) because `srs` runs nixos-rebuild under sudo, so
+  # ssh runs as root and ~ would resolve to /root/.ssh where the key isn't;
+  # with IdentitiesOnly that would block the agent key and fail with
+  # "Permission denied (publickey)". The agent key still matches via the .pub.
   # The trailing `Host *` resets scope: NixOS prepends extraConfig to
   # ssh_config, so without it the generated lines that follow (e.g. the
   # libvirt ssh-proxy Include) would be captured by the Host block above.
   programs.ssh.extraConfig = ''
     Host 192.168.1.245
-      IdentityFile ~/.ssh/id_server_ed25519
+      IdentityFile /home/connor/.ssh/id_server_ed25519
       IdentitiesOnly yes
 
     Host *
