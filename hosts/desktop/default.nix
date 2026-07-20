@@ -87,6 +87,10 @@ in
   nixpkgs.config.permittedInsecurePackages = [
     "electron-36.9.5"
     "electron-39.8.10"
+    # CVE-2026-42052 is an XSS in beets' `web` plugin's page generation. We
+    # use beets only as a CLI importer (see home/music.nix — no `web` plugin),
+    # so the vulnerable surface is never served. Revisit when beets updates.
+    "python3.13-beets-2.5.1"
   ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;

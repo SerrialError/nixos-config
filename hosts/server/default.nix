@@ -85,6 +85,63 @@
   ];
 
   ############################################################################
+  # Music library — received from the desktop over Syncthing, served by
+  # Navidrome. The desktop's ~/Music (curated by beets) is the canonical
+  # copy; this host only ever *receives* it (folder type "receiveonly"), so
+  # a mistake here can never propagate back and clobber the library.
+  #
+  # Pre-create the folder root owned by the syncthing user before either
+  # service starts: Navidrome's module would otherwise tmpfiles-create its
+  # MusicFolder as navidrome:navidrome 0700 (unreadable to syncthing), and
+  # syncthing would create its folder root 0700 (unreadable to navidrome).
+  # 0755 + syncthing-owned lets Navidrome (a different user) read the tree;
+  # Navidrome only needs read access. Synced music files carry their source
+  # mode (0644 files / 0755 dirs), so they stay world-readable here.
+  ############################################################################
+  systemd.tmpfiles.rules = [
+    "d /var/lib/music 0755 syncthing syncthing -"
+  ];
+
+  services.syncthing = {
+    enable = true;
+    # Manage devices/folders declaratively; drop anything added out-of-band.
+    overrideDevices = true;
+    overrideFolders = true;
+    settings = {
+      # Admin GUI stays on localhost — reach it via `ssh -L 8384:localhost:8384`.
+      gui.address = "127.0.0.1:8384";
+      devices.desktop.id = "45MTBYT-4EMXCYJ-7I5AAT4-7PSLKSN-JEZ5BD2-YO4H4D7-BBU7JW5-H7MPPAF";
+      folders.Music = {
+        # Folder ID must match the desktop's ("Music"); path is local.
+        path = "/var/lib/music";
+        devices = [ "desktop" ];
+        type = "receiveonly";
+      };
+    };
+  };
+  # Opens 22000/tcp+udp (sync) and 21027/udp (LAN discovery) in the firewall.
+  services.syncthing.openDefaultPorts = true;
+
+  ############################################################################
+  # Navidrome — Subsonic-API music server, LAN-only.
+  #
+  # Bound to all interfaces + firewall-opened so phones/clients on the home
+  # LAN can reach it directly; it is deliberately NOT put behind the public
+  # Caddy vhost (unlike Vaultwarden) to avoid streaming media through
+  # Cloudflare's proxy. For off-LAN access, add a VPN (e.g. Tailscale) later
+  # and this can go back to 127.0.0.1.
+  ############################################################################
+  services.navidrome = {
+    enable = true;
+    openFirewall = true; # opens settings.Port (4533/tcp)
+    settings = {
+      Address = "0.0.0.0";
+      Port = 4533;
+      MusicFolder = "/var/lib/music";
+    };
+  };
+
+  ############################################################################
   # Blocky — DNS ad/tracker blocking for the LAN, listening on :53.
   ############################################################################
   services.blocky = {

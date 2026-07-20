@@ -149,6 +149,11 @@
       gs = "git status";
       gd = "git diff";
       gl = "git log --oneline --graph --decorate";
+      # music: import staged downloads (~/staging) into the ~/Music library.
+      #   bi — loose singles/tracks, fully automatic (fingerprint + as-is fallback)
+      #   ba — albums (one folder per album), interactive so you can confirm matches
+      bi = "beet import -q -s ~/staging";
+      ba = "beet import ~/staging";
     };
     # agenix personal password notes (see age.secrets.passwords)
     #   pw  — view deployed secret at /run/agenix/passwords
@@ -613,6 +618,12 @@
         "laptop" = {
           id = "QSDBXQP-LWMP27Y-2R3UPXB-FJKCFCL-BYFXURB-JAJU4W3-IWZKTTJ-HURJ5QC";
         };
+        # Home server: receives the Music folder for Navidrome (receiveonly
+        # on its side). ID read from the server's Syncthing config after its
+        # first run.
+        "server" = {
+          id = "VJQSCJD-RTCHIMQ-RZL4QFJ-NUMCQ5P-IFLQC3C-VOMAXTU-BUNNG64-O7IRJAC";
+        };
       };
       folders = {
         "Documents" = {
@@ -629,7 +640,11 @@
         };
         "Music" = {
           path = "${config.home.homeDirectory}/Music";
-          devices = [ "laptop" ];
+          # "server" pulls the library for Navidrome (receiveonly there).
+          devices = [
+            "laptop"
+            "server"
+          ];
         };
       };
     };
