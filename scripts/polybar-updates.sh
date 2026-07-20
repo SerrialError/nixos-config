@@ -29,5 +29,5 @@ if [ "$locked" = "$latest" ]; then
   exit 0
 fi
 
-# Updates available.
-echo "%{F#F0C674}%{F-} updates"
+# Updates available — yellow label, mirroring the green up-to-date label above.
+echo "%{F#F0C674}Updates Available%{F-}"

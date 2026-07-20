@@ -140,8 +140,10 @@ in
         interval = 5;
       };
 
-      # Shows " updates" when the nixpkgs channel is ahead of flake.lock,
-      # or a green checkmark when up to date. Polled hourly; click to re-check.
+      # Shows yellow "Updates Available" when the nixpkgs channel is ahead of
+      # flake.lock, or green "Up to Date" when it matches. Only tracks the
+      # nixpkgs input, not the other flake inputs. Polled hourly; click to
+      # re-check.
       "module/updates" = {
         type = "custom/script";
         exec = "${polybar-updates}/bin/polybar-updates";
