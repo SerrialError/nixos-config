@@ -306,6 +306,8 @@ in
 
   environment.systemPackages = with pkgs; [
     obs-studio
+    libreoffice
+    gnucash
     claude-monitor
     heroic
     gdb
@@ -344,6 +346,8 @@ in
     paraview
     mpi
     alsa-utils
+    pkgs-unstable.pear-desktop # only packaged in nixpkgs-unstable
+    nicotine-plus
     networkmanagerapplet
     blueman
     nlohmann_json
