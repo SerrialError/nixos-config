@@ -137,6 +137,10 @@
       # keeps connor's ssh-agent usable for the remote hop.
       srb = "sudo nixos-rebuild build --flake /home/connor/git/nixos-config#server --impure |& nom";
       srs = "sudo --preserve-env=SSH_AUTH_SOCK nixos-rebuild switch --flake /home/connor/git/nixos-config#server --impure --target-host connor@192.168.1.245 --sudo --ask-sudo-password";
+      # Always use the desktop's age identity for agenix. agenix only auto-finds
+      # SSH keys, but our recipient is the age key in keys.txt, so without this
+      # every `agenix -e`/`-r` needs an explicit `-i`.
+      agenix = "agenix -i /home/connor/.config/sops/age/keys.txt";
       ls = "eza --icons --group-directories-first";
       ll = "eza -l --icons --git --group-directories-first";
       la = "eza -la --icons --git --group-directories-first";

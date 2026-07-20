@@ -7,6 +7,7 @@
     ./hardware-configuration.nix
     ../../modules/common.nix
     ../../profiles/server.nix
+    ./monitoring.nix
   ];
 
   networking.hostName = "server";

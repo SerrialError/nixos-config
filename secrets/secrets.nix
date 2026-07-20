@@ -29,4 +29,16 @@ in
     primary
     server
   ];
+  # Gatus environment file: NTFY_URL / NTFY_TOPIC / NTFY_TOKEN for alerting,
+  # interpolated into the Gatus config. Decrypted on the server.
+  "gatus-env.age".publicKeys = [
+    primary
+    server
+  ];
+  # healthchecks.io ping URL (a capability URL) for the dead-man's-switch timer.
+  # Decrypted on the server.
+  "healthchecks-url.age".publicKeys = [
+    primary
+    server
+  ];
 }
