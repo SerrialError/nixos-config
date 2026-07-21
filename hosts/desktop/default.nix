@@ -346,7 +346,6 @@ in
     winetricks
     element-desktop
     dconf
-    mpi
     alsa-utils
     pkgs-unstable.pear-desktop # only packaged in nixpkgs-unstable
     nicotine-plus
