@@ -96,12 +96,39 @@
               "x-scheme-handler/https"
             ]
         );
+        # Pin every text-ish type to the Alacritty-wrapped nvim entry below.
+        text = builtins.listToAttrs (
+          map (t: {
+            name = t;
+            value = "nvim.desktop";
+          }) config.xdg.desktopEntries.nvim.mimeType
+        );
+        audio = builtins.listToAttrs (
+          map
+            (t: {
+              name = t;
+              value = "mpv.desktop";
+            })
+            [
+              "audio/mpeg"
+              "audio/flac"
+              "audio/ogg"
+              "audio/x-vorbis+ogg"
+              "audio/opus"
+              "audio/x-wav"
+              "audio/aac"
+              "audio/mp4"
+              "audio/x-m4a"
+            ]
+        );
       in
       {
         enable = true;
         defaultApplications =
           images
           // browser
+          // text
+          // audio
           // {
             "application/pdf" = "org.pwmt.zathura.desktop";
             "video/webm" = "mpv.desktop";
@@ -111,6 +138,45 @@
             "message/rfc822" = "thunderbird.desktop";
           };
       };
+
+    # Neovim's own desktop file is Terminal=true, so opening a text file from
+    # thunar/xdg-open launches nvim inside whatever terminal GLib falls back to
+    # (that was xterm). This entry shadows it (XDG_DATA_HOME beats the profile
+    # copy) to force Alacritty; the text/* types above resolve here.
+    desktopEntries.nvim = {
+      name = "Neovim";
+      genericName = "Text Editor";
+      comment = "Edit text files in Neovim";
+      exec = "alacritty --title nvim --command nvim %F";
+      icon = "nvim";
+      terminal = false;
+      type = "Application";
+      categories = [
+        "Utility"
+        "TextEditor"
+      ];
+      mimeType = [
+        "text/plain"
+        "text/markdown"
+        "text/csv"
+        "text/xml"
+        "application/xml"
+        "application/json"
+        "application/toml"
+        "application/x-yaml"
+        "text/x-python"
+        "text/x-lua"
+        "text/x-shellscript"
+        "application/x-shellscript"
+        "text/x-c"
+        "text/x-csrc"
+        "text/x-chdr"
+        "text/x-c++src"
+        "text/x-c++hdr"
+        "text/x-makefile"
+        "text/x-tex"
+      ];
+    };
   };
 
   # zsh is the primary interactive shell (see users.users.connor.shell).

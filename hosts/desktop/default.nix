@@ -170,6 +170,9 @@ in
     windowManager.i3.enable = true;
     xkb.layout = "us";
     xkb.variant = "";
+    # The xserver module pulls in xterm unconditionally; nothing here needs it
+    # (i3 + text-file opening both use Alacritty).
+    excludePackages = [ pkgs.xterm ];
   };
   services.displayManager = {
     defaultSession = "none+i3";
@@ -315,8 +318,8 @@ in
     gimp
     vscode
     prismlauncher
+    grayjay
     cups-printers
-    kitty
     libnotify
     feh
     qimgv
@@ -343,7 +346,6 @@ in
     winetricks
     element-desktop
     dconf
-    paraview
     mpi
     alsa-utils
     pkgs-unstable.pear-desktop # only packaged in nixpkgs-unstable
