@@ -30,6 +30,13 @@ nix flake update nvf        # a single input (see nvf note below)
 
 There is no test suite or linter — validation is `nixos-rebuild build` succeeding for **both** `.#default` and `.#server`.
 
+### Note for Claude Code
+
+`nixos-rebuild` needs `sudo` here (the `--impure` eval reads the root-only agenix keyfile), and `sudo` in this environment prompts for a password on an interactive TTY that Claude cannot answer — so **Claude cannot run `nrs`/`nrb`/`srb` or any `sudo nixos-rebuild` itself**; those will just hang or fail. Instead:
+
+- **Validate changes without sudo** by evaluating the config directly, e.g. `nix eval --impure --expr '(builtins.getFlake "/home/connor/git/nixos-config").nixosConfigurations.default.config…'` (or the `home-manager.users.connor` attrs). This catches Nix eval errors, option typos, and lets you inspect the resulting values.
+- **Hand the actual rebuild to the user** — after your edits evaluate cleanly, ask them to run `nrs` (or `nrb` to preview). Do not report a change as "done/working" based on your own build; you can't run one. Wait for the user to confirm the rebuild succeeded before committing.
+
 ## Architecture
 
 - **`flake.nix`** — inputs and `nixosConfigurations.{default,server}`. home-manager is wired in as a NixOS module for the desktop only (not standalone), so `nixos-rebuild` applies both system and user config in one step; the server has no home-manager.
