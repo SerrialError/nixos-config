@@ -40,6 +40,15 @@ in
     "python3.13-beets-2.5.1"
   ];
 
+  # Personal password notes (replaces ~/password.txt), user-readable only.
+  # Shared by both graphical hosts so `pw` works on the desktop and the laptop;
+  # the `laptop` host key is a recipient of passwords.age in secrets/secrets.nix.
+  age.secrets.passwords = {
+    file = ../secrets/passwords.age;
+    owner = "connor";
+    mode = "0400";
+  };
+
   # UEFI boot on both machines. The desktop adds NVIDIA kernel params on top.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

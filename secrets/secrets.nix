@@ -17,8 +17,12 @@ in
     server
     laptop
   ];
-  # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user connor at /run/agenix/passwords.
-  "passwords.age".publicKeys = [ primary ];
+  # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user
+  # connor at /run/agenix/passwords on both graphical hosts (desktop + laptop).
+  "passwords.age".publicKeys = [
+    primary
+    laptop
+  ];
   # Vaultwarden env file (ADMIN_TOKEN=<argon2id hash>), decrypted on the server.
   "vaultwarden-env.age".publicKeys = [
     primary

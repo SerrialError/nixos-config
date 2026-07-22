@@ -58,12 +58,6 @@ in
     owner = "git";
     mode = "0440"; # Read-only for owner and group
   };
-  # Personal password notes (replaces ~/password.txt). User-readable only.
-  age.secrets.passwords = {
-    file = ../../secrets/passwords.age;
-    owner = "connor";
-    mode = "0400";
-  };
   # Dedicated key for deploying to / logging into the home server, generated
   # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
   # server Host block so it isn't offered to unrelated hosts like GitHub;
