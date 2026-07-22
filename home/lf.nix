@@ -18,6 +18,14 @@
           mkdir $DIR
         }}
       '';
+      delete = ''
+        ''${{
+          printf "$fx\n"
+          printf "delete? [y/N] "
+          read ans
+          [ "$ans" = "y" ] && rm -rf $fx
+        }}
+      '';
     };
 
     keybindings = {
@@ -29,6 +37,7 @@
       "\\'" = "mark-load";
       "<enter>" = "open";
       do = "dragon-out";
+      D = "delete";
       "g~" = "cd";
       gh = "cd";
       "g/" = "/";
