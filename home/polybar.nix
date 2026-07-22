@@ -29,7 +29,7 @@ let
   isLaptop = osConfig.networking.hostName == "laptop";
   modulesRight =
     if isLaptop then
-      "mpd updates temperature pulseaudio battery date"
+      "mpd updates temperature backlight pulseaudio battery date"
     else
       "mpd updates temperature gputemp pulseaudio date";
   # polybar reads the CPU temperature by thermal-zone index, and x86_pkg_temp
@@ -217,6 +217,22 @@ in
         animation-charging-3 = "";
         animation-charging-4 = "";
         animation-charging-framerate = 750;
+      };
+      # Laptop panel backlight (intel_backlight). The desktop drives an external
+      # monitor over NVIDIA and has no /sys/class/backlight interface, so this
+      # module is laptop-only. use-actual-brightness reads the value the panel
+      # actually applied rather than the last requested one; scroll to adjust.
+      "module/backlight" = {
+        type = "internal/backlight";
+        card = "intel_backlight";
+        use-actual-brightness = true;
+        enable-scroll = true;
+        format = "<ramp> <label>";
+        label = "%percentage%%";
+        ramp-0 = "";
+        ramp-1 = "";
+        ramp-2 = "";
+        ramp-foreground = "\${colors.primary}";
       };
     };
   };
