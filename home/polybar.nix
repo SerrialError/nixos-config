@@ -1,4 +1,10 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  osConfig,
+  ...
+}:
 
 let
   # Wrap the raw script so it runs under the polybar systemd user service,
@@ -17,6 +23,19 @@ let
     name = "polybar-gputemp";
     text = builtins.readFile ../scripts/polybar-gputemp.sh;
   };
+
+  # The desktop and laptop share this bar; a few modules are host-specific.
+  # The laptop swaps the NVIDIA gputemp module for battery + Wi-Fi indicators.
+  isLaptop = osConfig.networking.hostName == "laptop";
+  modulesRight =
+    if isLaptop then
+      "mpd updates temperature pulseaudio network battery date"
+    else
+      "mpd updates temperature gputemp pulseaudio date";
+  # polybar reads the CPU temperature by thermal-zone index, and x86_pkg_temp
+  # sits at a different index on each machine (zone 2 on the desktop, zone 7 on
+  # the laptop), so the index must be chosen per host.
+  cpuThermalZone = if isLaptop then 7 else 2;
 in
 {
   # Required packages
@@ -65,7 +84,7 @@ in
         separator-foreground = "\${colors.disabled}";
         font-0 = "JetBrainsMono Nerd Font:size=10;2";
         modules-left = "systray xworkspaces xwindow";
-        modules-right = "mpd updates temperature gputemp pulseaudio date";
+        modules-right = modulesRight;
         cursor-click = "pointer";
         cursor-scroll = "ns-resize";
         enable-ipc = true;
@@ -121,10 +140,10 @@ in
       "module/temperature" = {
         type = "internal/temperature";
         interval = "1";
-        # thermal_zone2 is the x86_pkg_temp (CPU package) zone on this host.
-        # hwmon indices are unstable across boots, so drive it off the zone
-        # rather than a hardcoded /sys/.../hwmonN path.
-        thermal-zone = 2;
+        # x86_pkg_temp (CPU package) zone; its index differs per host, so it is
+        # set via cpuThermalZone above. hwmon indices are unstable across boots,
+        # so drive it off the thermal zone rather than a hardcoded hwmonN path.
+        thermal-zone = cpuThermalZone;
         zone-type = "x86_pkg_temp";
         base-temperature = 20;
         warn-temperature = 60;
@@ -168,6 +187,52 @@ in
         icon-prev = "";
         icon-next = "";
         label-offline = "";
+      };
+    }
+    // lib.optionalAttrs isLaptop {
+      # Laptop-only hardware indicators. BAT0/ADP0 and the wlp1s0 Wi-Fi radio
+      # don't exist on the desktop (wired + no battery), so these modules are
+      # only defined — and only referenced in modules-right — on the laptop.
+      "module/battery" = {
+        type = "internal/battery";
+        battery = "BAT0";
+        adapter = "ADP0";
+        full-at = 99;
+        poll-interval = 5;
+        format-charging = "<animation-charging> <label-charging>";
+        format-discharging = "<ramp-capacity> <label-discharging>";
+        format-full = "<ramp-capacity> <label-full>";
+        label-charging = "%percentage%%";
+        label-discharging = "%percentage%%";
+        label-full = "%percentage%%";
+        ramp-capacity-0 = "";
+        ramp-capacity-1 = "";
+        ramp-capacity-2 = "";
+        ramp-capacity-3 = "";
+        ramp-capacity-4 = "";
+        ramp-capacity-0-foreground = "\${colors.alert}";
+        animation-charging-0 = "";
+        animation-charging-1 = "";
+        animation-charging-2 = "";
+        animation-charging-3 = "";
+        animation-charging-4 = "";
+        animation-charging-framerate = 750;
+      };
+      "module/network" = {
+        type = "internal/network";
+        interface = "wlp1s0";
+        interface-type = "wireless";
+        interval = 5;
+        format-connected = "<ramp-signal> <label-connected>";
+        label-connected = "%essid%";
+        format-disconnected = "<label-disconnected>";
+        label-disconnected = "off";
+        label-disconnected-foreground = "\${colors.disabled}";
+        ramp-signal-0 = "󰤯";
+        ramp-signal-1 = "󰤟";
+        ramp-signal-2 = "󰤢";
+        ramp-signal-3 = "󰤥";
+        ramp-signal-4 = "󰤨";
       };
     };
   };
