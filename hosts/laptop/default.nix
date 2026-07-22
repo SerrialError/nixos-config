@@ -24,6 +24,17 @@
   # Touchpad support (harmless in the VM; real hardware on the laptop).
   services.libinput.enable = true;
 
+  # The built-in trackpad (I2C HID "CRQ1080…", exposed as both a Touchpad and a
+  # Mouse node) is physically broken and fires spurious input, so tell X to
+  # ignore both of its nodes. The external USB mouse and keyboard are unaffected.
+  services.xserver.inputClassSections = [
+    ''
+      Identifier "disable-broken-trackpad"
+      MatchProduct "CRQ1080"
+      Option "Ignore" "on"
+    ''
+  ];
+
   # Local VM management, same as the desktop but without the NVIDIA SPICE
   # workaround wrappers (plain quickemu works on non-NVIDIA graphics).
   environment.systemPackages = with pkgs; [
