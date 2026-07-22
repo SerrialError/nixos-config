@@ -24,6 +24,16 @@
   # Touchpad support (harmless in the VM; real hardware on the laptop).
   services.libinput.enable = true;
 
+  # Let the video group write panel brightness so polybar's backlight module
+  # can scroll-to-adjust. /sys/class/backlight/*/brightness is root-owned by
+  # default; this chgrps it to video and adds group-write on device add.
+  # connor is in the video group (profiles/desktop.nix). brightnessctl (in the
+  # i3 keybindings) works via logind and doesn't need this, but polybar writes
+  # sysfs directly.
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
+  '';
+
   # The built-in trackpad (I2C HID "CRQ1080…", exposed as both a Touchpad and a
   # Mouse node) is physically broken and fires spurious input, so tell X to
   # ignore both of its nodes. The external USB mouse and keyboard are unaffected.

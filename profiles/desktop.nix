@@ -181,6 +181,9 @@ in
     "networkmanager"
     "docker"
     "libvirtd"
+    # Backlight write access (laptop): the udev rule in hosts/laptop grants the
+    # video group g+w on /sys/class/backlight so polybar's scroll can adjust it.
+    "video"
   ];
 
   home-manager = {
