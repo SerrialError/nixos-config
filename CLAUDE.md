@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Personal NixOS system configuration as a flake. Two hosts:
+Personal NixOS system configuration as a flake. Three hosts:
 
 - `nixosConfigurations.default` (hostname `nixos`) — the desktop: X11 with i3 + polybar on an NVIDIA (Pascal GTX 1080 Ti) machine. **Do not rename this output** — the `nrb`/`nrs` aliases use `.#default`.
+- `nixosConfigurations.laptop` (hostname `laptop`) — a laptop running the same graphical desktop as `default` via the shared `profiles/desktop.nix`, minus the NVIDIA driver, storage mounts, and git-shell server (uses the modesetting driver). `hosts/laptop/hardware-configuration.nix` is the real laptop's scan (regenerate if the hardware changes — README "Laptop: bootstrap"). agenix decrypts with the machine's own SSH host key (no `age.identityPaths` override), so the `laptop` recipient in `secrets/secrets.nix` is that machine's host key; rekey if it is ever reinstalled.
 - `nixosConfigurations.server` (hostname `server`) — a headless x86_64 laptop home server: Caddy (static site + Vaultwarden reverse proxy), Vaultwarden, Blocky DNS. Its `hosts/server/hardware-configuration.nix` is a **placeholder** until generated on the real machine; `PLACEHOLDER-DOMAIN` / `SERVER-IP-PLACEHOLDER` are meant to be search-and-replaced (see README bootstrap steps).
 
 ## Build / apply
@@ -18,6 +19,9 @@ sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure
 # Preview without switching (alias `nrb`)
 sudo nixos-rebuild build --flake /home/connor/git/nixos-config#default --impure
 
+# Laptop: build/switch the laptop config (no alias; deploy or run on the laptop)
+sudo nixos-rebuild build --flake /home/connor/git/nixos-config#laptop --impure
+
 # Server: build locally (alias `srb`) / deploy over SSH (alias `srs`)
 sudo nixos-rebuild build --flake /home/connor/git/nixos-config#server --impure
 
@@ -28,7 +32,7 @@ nix flake update nvf        # a single input (see nvf note below)
 
 `--impure` is **required** for both hosts: `users.users.*.openssh.authorizedKeys.keyFiles` reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time (root-only, hence sudo). Rebuilds fail without it, and `nix flake check` cannot work (pure eval).
 
-There is no test suite or linter — validation is `nixos-rebuild build` succeeding for **both** `.#default` and `.#server`.
+There is no test suite or linter — validation is `nixos-rebuild build` succeeding for `.#default`, `.#laptop`, and `.#server`.
 
 ### Note for Claude Code
 
@@ -39,9 +43,11 @@ There is no test suite or linter — validation is `nixos-rebuild build` succeed
 
 ## Architecture
 
-- **`flake.nix`** — inputs and `nixosConfigurations.{default,server}`. home-manager is wired in as a NixOS module for the desktop only (not standalone), so `nixos-rebuild` applies both system and user config in one step; the server has no home-manager.
+- **`flake.nix`** — inputs and `nixosConfigurations.{default,laptop,server}`. home-manager is wired in as a NixOS module for the graphical hosts (desktop + laptop), not standalone, so `nixos-rebuild` applies both system and user config in one step; the server has no home-manager.
 - **`modules/common.nix`** — baseline shared by all hosts: nix gc/optimise + flakes, allowUnfree, locale/timezone, agenix module + the `ssh-auth-keys` secret, base `connor` user (wheel, zsh, authorized keys), key-only sshd, core CLI packages. When adding config, put it here only if every host wants it.
-- **`hosts/desktop/default.nix`** — all desktop system config (boot, hardware, services, `environment.systemPackages`, users). Also configures the `home-manager` block and the SDDM login screen (`sddm-astronaut` theme; a `sddm-random-background` systemd service copies a random `~/Pictures/wallpapers` image to `/var/lib/sddm-background/background.png` before the display manager starts).
+- **`profiles/desktop.nix`** — the shared graphical desktop imported by both `hosts/desktop` and `hosts/laptop` (and it in turn imports `modules/common.nix`). Holds i3/SDDM/PipeWire, docker/libvirt, portals, the full `environment.systemPackages`, fonts, the `home-manager` block, and the SDDM login screen (`sddm-astronaut` theme; a `sddm-random-background` systemd service copies a random `~/Pictures/wallpapers` image to `/var/lib/sddm-background/background.png` before the display manager starts). `videoDrivers` is deliberately **not** set here — each host sets its own.
+- **`hosts/desktop/default.nix`** — desktop-only config on top of the profile: NVIDIA driver + kernel params, the `/mnt/storage` and `/mnt/nvme` mounts, the git-shell server, quickemu SPICE wrappers + `btop-cuda`, `age.identityPaths` (the sops age key), hostname `nixos`, `stateVersion` 25.05.
+- **`hosts/laptop/default.nix`** — laptop-only config on top of the profile: `hardware.graphics.enable`, touchpad (libinput), plain `quickemu`/`btop`/`brightnessctl`, hostname `laptop`, `stateVersion` 25.11. No `age.identityPaths` — agenix uses the host SSH key. `hardware-configuration.nix` is the real laptop's scan.
 - **`hosts/server/default.nix`** — server system config: GRUB (BIOS laptop), Caddy vhosts, Vaultwarden (localhost:8222, daily `backupDir` backup), Blocky on :53, firewall 80/443/53. The `age.secrets.vaultwarden-env` block stays commented until the secret exists (see README).
 - **`profiles/server.nix`** — headless hardening: no root login, firewall on, lid switch ignored.
 - **`home.nix`** — the home-manager entrypoint (desktop users). Imports `home/` and holds most user program config inline.
@@ -55,7 +61,7 @@ Stable `nixos-25.11` is the default. `nixpkgs-unstable` is imported inside `host
 
 ### home-manager sharing
 
-`home-manager.useGlobalPkgs = true`, so the system's `nixpkgs.config` (allowUnfree, `permittedInsecurePackages`, overlays) is shared with home-manager — do **not** redefine nixpkgs config in `home.nix`. The same `home.nix` is imported for two users: `connor` (zsh, primary) and `nixosvmtest` (bash, VM test account).
+`home-manager.useGlobalPkgs = true`, so the system's `nixpkgs.config` (allowUnfree, `permittedInsecurePackages`, overlays) is shared with home-manager — do **not** redefine nixpkgs config in `home.nix`.
 
 ### Editor
 

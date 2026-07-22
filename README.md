@@ -3,6 +3,8 @@
 This repository contains my personal NixOS configurations:
 
 - **`default`** — the desktop: i3-gaps + Polybar on X11/NVIDIA
+- **`laptop`** — a laptop running the same graphical desktop as `default`,
+  minus the NVIDIA driver, extra storage disks, and git-shell server
 - **`server`** — a headless laptop home server: Caddy (static site + reverse
   proxy), Vaultwarden, Blocky DNS blocking
 
@@ -49,12 +51,16 @@ reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time.
 
 ## Repo layout
 
-- `flake.nix`: inputs + `nixosConfigurations.{default,server}`
+- `flake.nix`: inputs + `nixosConfigurations.{default,laptop,server}`
 - `hosts/desktop/`: desktop system config (`default.nix`) + hardware scan
+- `hosts/laptop/`: laptop system config; `hardware-configuration.nix` is the
+  real laptop's scan (regenerate if the hardware changes — see below)
 - `hosts/server/`: server system config; `hardware-configuration.nix` is a
   **placeholder** until generated on the real machine
 - `modules/common.nix`: shared baseline for all hosts (nix gc/settings,
   locale/timezone, agenix wiring, `connor` user + SSH keys, base packages)
+- `profiles/desktop.nix`: shared graphical desktop (i3/SDDM/PipeWire, the full
+  package set, home-manager) imported by both `hosts/desktop` and `hosts/laptop`
 - `profiles/server.nix`: headless profile (hardened SSH, firewall, lid ignore)
 - `home.nix`: Home Manager entrypoint (desktop users only)
 - `home/`: Home-manager modules (alacritty, GTK/Qt theming, i3, lf, polybar, tmux)
@@ -101,6 +107,39 @@ below are the order that worked.
    ```
 7. Every later deploy is just `srs` (see below); root SSH is disabled from now
    on by `profiles/server.nix`.
+
+## Laptop: bootstrap
+
+The `laptop` host is already deployed to the real laptop. These are the steps
+that bootstrapped it (and how to re-do them if the machine is reinstalled or the
+hardware changes) — the config is hardware-independent apart from
+`hardware-configuration.nix` and the host-key recipient in `secrets/secrets.nix`.
+
+1. Install NixOS on the laptop from the **25.11** minimal ISO. Enable
+   `services.openssh` and authorize your desktop key **for root as well as
+   connor** (the first deploy runs as `root@`).
+2. On the laptop: `nixos-generate-config`, then copy the resulting
+   `/etc/nixos/hardware-configuration.nix` over
+   `hosts/laptop/hardware-configuration.nix` in this repo (replace it entirely).
+   If the laptop has non-Intel/AMD graphics that need a specific driver, set
+   `services.xserver.videoDrivers` in `hosts/laptop/default.nix` (it defaults to
+   modesetting, which covers Intel/AMD and the test VM).
+3. Grab the laptop's host key: `cat /etc/ssh/ssh_host_ed25519_key.pub`, paste it
+   as the `laptop` recipient in `secrets/secrets.nix` (replacing the VM's key),
+   then rekey: `cd secrets && agenix -r`.
+4. First deploy from the desktop **as root**, activating via `boot` + reboot
+   (a `connor@` push is rejected as unsigned until connor is nix-trusted, and a
+   live switch across the systemd version from the install ISO can wedge
+   activation):
+
+   ```bash
+   sudo --preserve-env=SSH_AUTH_SOCK nixos-rebuild boot \
+     --flake .#laptop --impure --target-host root@<laptop-ip>
+   ssh root@<laptop-ip> reboot
+   ```
+5. Later deploys go over SSH as connor (`--target-host connor@<laptop-ip>
+   --sudo --ask-sudo-password`), or run `nixos-rebuild switch --flake .#laptop
+   --impure` locally on the laptop.
 
 ## Deploying
 

@@ -36,6 +36,16 @@
         ];
       };
 
+      # Laptop: same graphical desktop as `default`, without NVIDIA/git-server.
+      nixosConfigurations.laptop = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/laptop
+          inputs.home-manager.nixosModules.default
+        ];
+      };
+
       # Home server (headless laptop): Caddy, Vaultwarden, Blocky.
       nixosConfigurations.server = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
