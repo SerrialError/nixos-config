@@ -61,6 +61,9 @@ in
         "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/scripts/picom-grayscale-toggle.sh";
         "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show, move position center";
         "${modifier}+Shift+m" = "exec alacritty -e ncmpcpp";
+        # Lock now. loginctl signals logind, which xss-lock catches and runs
+        # betterlockscreen (laptop only; a no-op where no locker is registered).
+        "${modifier}+Shift+x" = "exec loginctl lock-session";
 
         # Media keys drive MPD via playerctl (MPD's MPRIS bridge, mpd-mpris).
         "XF86AudioPlay" = "exec playerctl play-pause";

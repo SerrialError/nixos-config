@@ -61,4 +61,12 @@ if [ -f "$PICOM_GRAY_FLAG" ]; then
   make_gray_and_set "$WALLPAPER" || true
 fi
 
+# Refresh the betterlockscreen cache so the lock screen shows the current
+# wallpaper. Only present on the laptop; skipped elsewhere. Backgrounded
+# because caching (resize/blur precompute) takes a couple of seconds and must
+# not stall session startup — the previous cache stays valid until it finishes.
+if command -v betterlockscreen >/dev/null 2>&1; then
+  betterlockscreen -u "$WALLPAPER" >/dev/null 2>&1 &
+fi
+
 echo "Random wallpaper set: $WALLPAPER"
