@@ -25,11 +25,11 @@ let
   };
 
   # The desktop and laptop share this bar; a few modules are host-specific.
-  # The laptop swaps the NVIDIA gputemp module for battery + Wi-Fi indicators.
+  # The laptop swaps the NVIDIA gputemp module for a battery indicator.
   isLaptop = osConfig.networking.hostName == "laptop";
   modulesRight =
     if isLaptop then
-      "mpd updates temperature pulseaudio network battery date"
+      "mpd updates temperature pulseaudio battery date"
     else
       "mpd updates temperature gputemp pulseaudio date";
   # polybar reads the CPU temperature by thermal-zone index, and x86_pkg_temp
@@ -190,9 +190,9 @@ in
       };
     }
     // lib.optionalAttrs isLaptop {
-      # Laptop-only hardware indicators. BAT0/ADP0 and the wlp1s0 Wi-Fi radio
-      # don't exist on the desktop (wired + no battery), so these modules are
-      # only defined — and only referenced in modules-right — on the laptop.
+      # Laptop-only hardware indicator. BAT0/ADP0 don't exist on the desktop
+      # (wired + no battery), so this module is only defined — and only
+      # referenced in modules-right — on the laptop.
       "module/battery" = {
         type = "internal/battery";
         battery = "BAT0";
@@ -217,22 +217,6 @@ in
         animation-charging-3 = "";
         animation-charging-4 = "";
         animation-charging-framerate = 750;
-      };
-      "module/network" = {
-        type = "internal/network";
-        interface = "wlp1s0";
-        interface-type = "wireless";
-        interval = 5;
-        format-connected = "<ramp-signal> <label-connected>";
-        label-connected = "%essid%";
-        format-disconnected = "<label-disconnected>";
-        label-disconnected = "off";
-        label-disconnected-foreground = "\${colors.disabled}";
-        ramp-signal-0 = "󰤯";
-        ramp-signal-1 = "󰤟";
-        ramp-signal-2 = "󰤢";
-        ramp-signal-3 = "󰤥";
-        ramp-signal-4 = "󰤨";
       };
     };
   };
