@@ -3,9 +3,15 @@
   inputs,
   pkgs,
   lib,
+  osConfig,
   ...
 }:
 
+let
+  # The same home config is shared by the desktop and the laptop; a couple of
+  # options (currently just Syncthing's peer topology) differ between them.
+  isLaptop = osConfig.networking.hostName == "laptop";
+in
 {
   imports = [
     inputs.nix-colors.homeManagerModules.default
@@ -677,43 +683,56 @@
     enable = true;
   };
 
+  # Syncthing peers the two graphical hosts (desktop <-> laptop) for the
+  # personal folders, and the desktop additionally feeds ~/Music to the server
+  # for Navidrome. Because this config is shared, the peer set is host-aware:
+  # the laptop syncs with the desktop, and vice versa.
   services.syncthing = {
     enable = true;
-    settings = {
-      devices = {
-        "laptop" = {
-          id = "QSDBXQP-LWMP27Y-2R3UPXB-FJKCFCL-BYFXURB-JAJU4W3-IWZKTTJ-HURJ5QC";
-        };
-        # Home server: receives the Music folder for Navidrome (receiveonly
-        # on its side). ID read from the server's Syncthing config after its
-        # first run.
-        "server" = {
-          id = "VJQSCJD-RTCHIMQ-RZL4QFJ-NUMCQ5P-IFLQC3C-VOMAXTU-BUNNG64-O7IRJAC";
+    # Manage devices/folders declaratively; drop anything added out-of-band.
+    overrideDevices = true;
+    overrideFolders = true;
+    settings =
+      let
+        peer = if isLaptop then "desktop" else "laptop";
+      in
+      {
+        devices =
+          if isLaptop then
+            {
+              # The laptop's only peer is the desktop.
+              "desktop".id = "45MTBYT-4EMXCYJ-7I5AAT4-7PSLKSN-JEZ5BD2-YO4H4D7-BBU7JW5-H7MPPAF";
+            }
+          else
+            {
+              "laptop".id = "P4TUN2R-KGLLSO3-6KFDTQE-GPZOJ76-LSYXVWD-OQFZICD-ZEALFOC-QYXCAQM";
+              # Home server: receives the Music folder for Navidrome
+              # (receiveonly on its side).
+              "server".id = "VJQSCJD-RTCHIMQ-RZL4QFJ-NUMCQ5P-IFLQC3C-VOMAXTU-BUNNG64-O7IRJAC";
+            };
+        folders = {
+          "Documents" = {
+            path = "${config.home.homeDirectory}/Documents";
+            devices = [ peer ];
+          };
+          "Pictures" = {
+            path = "${config.home.homeDirectory}/Pictures";
+            devices = [ peer ];
+          };
+          "Videos" = {
+            path = "${config.home.homeDirectory}/Videos";
+            devices = [ peer ];
+          };
+          "Music" = {
+            path = "${config.home.homeDirectory}/Music";
+            # The desktop's ~/Music is canonical (curated by beets); the server
+            # pulls it for Navidrome (receiveonly there). The laptop only keeps
+            # a receiveonly copy so it can never clobber the library.
+            devices = [ peer ] ++ lib.optional (!isLaptop) "server";
+          }
+          // lib.optionalAttrs isLaptop { type = "receiveonly"; };
         };
       };
-      folders = {
-        "Documents" = {
-          path = "${config.home.homeDirectory}/Documents";
-          devices = [ "laptop" ];
-        };
-        "Pictures" = {
-          path = "${config.home.homeDirectory}/Pictures";
-          devices = [ "laptop" ];
-        };
-        "Videos" = {
-          path = "${config.home.homeDirectory}/Videos";
-          devices = [ "laptop" ];
-        };
-        "Music" = {
-          path = "${config.home.homeDirectory}/Music";
-          # "server" pulls the library for Navidrome (receiveonly there).
-          devices = [
-            "laptop"
-            "server"
-          ];
-        };
-      };
-    };
   };
   services.dunst.enable = true;
 
