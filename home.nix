@@ -490,6 +490,42 @@ in
         clipboard.enable = true;
         clipboard.providers.xclip.enable = true;
         clipboard.registers = "unnamedplus";
+        # `unnamedplus` ties the unnamed register to the system clipboard, so by
+        # default deletes/changes overwrite it too. Route the whole delete/change
+        # family to the black-hole register `_` so only an explicit yank updates
+        # the clipboard -- a copied item then survives edits (deleted text is
+        # recovered with undo, not paste). Visual-mode `p` also black-holes the
+        # text it replaces so pasting over a selection can't clobber it either.
+        keymaps =
+          let
+            blackhole = key: {
+              inherit key;
+              mode = [
+                "n"
+                "x"
+              ];
+              action = "\"_${key}";
+              desc = "${key}: delete without touching the clipboard";
+            };
+          in
+          (map blackhole [
+            "d"
+            "c"
+            "x"
+            "s"
+            "D"
+            "C"
+            "X"
+            "S"
+          ])
+          ++ [
+            {
+              key = "p";
+              mode = "x";
+              action = "\"_dP";
+              desc = "Paste over selection without clobbering the clipboard";
+            }
+          ];
         statusline.lualine.enable = true;
         telescope.enable = true;
         autocomplete.nvim-cmp.enable = true;
