@@ -44,6 +44,34 @@
     brightnessctl # backlight control (bound in i3 on the real laptop)
   ];
 
+  # Close the lid -> suspend, on battery or AC. The in-session locker
+  # (home/lockscreen.nix: xss-lock + betterlockscreen) registers a logind sleep
+  # inhibitor, so the screen locks *before* the machine sleeps and the laptop
+  # demands the password on resume. Contrast the server, which ignores the lid.
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend";
+    HandleLidSwitchExternalPower = "suspend";
+  };
+
+  # Laptop power management (Intel). powerManagement.enable pulls in the suspend
+  # hooks; thermald does Intel thermal throttling; upower exposes battery state
+  # (polybar/notifications); TLP tunes CPU scaling per AC/battery for battery
+  # life. TLP owns cpufreq here, so don't also set powerManagement.cpuFreqGovernor.
+  powerManagement.enable = true;
+  services.thermald.enable = true;
+  services.upower.enable = true;
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+      CPU_BOOST_ON_AC = 1;
+      CPU_BOOST_ON_BAT = 0;
+    };
+  };
+
   users.users.connor.description = "connor-laptop";
 
   # Fresh install from the 25.11-era channel; leave at first-install release.
