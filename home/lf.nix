@@ -20,10 +20,17 @@
       '';
       delete = ''
         ''${{
-          printf "$fx\n"
+          # lf runs this in sh and separates the selection ($fx) by newline.
+          # Restrict IFS to newline+tab (so names with spaces stay intact) and
+          # disable globbing before the unquoted expansion, otherwise a folder
+          # like "My Stuff" word-splits and rm -f silently skips it -> "delete
+          # doesn't work". rm -rf -- handles dirs and leading-dash names.
+          set -f
+          IFS="$(printf '\n\t')"
+          printf "%s\n" $fx
           printf "delete? [y/N] "
           read ans
-          [ "$ans" = "y" ] && rm -rf $fx
+          [ "$ans" = "y" ] && rm -rf -- $fx
         }}
       '';
     };
