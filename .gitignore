@@ -1,5 +1,8 @@
 result
 
+# Claude Code local runtime state
+.claude/
+
 # Never commit plaintext SSH/private keys — encrypt them with agenix instead
 id_rsa
 id_dsa
