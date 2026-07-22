@@ -74,6 +74,14 @@
 
   users.users.connor.description = "connor-laptop";
 
+  # Keep connor's user manager (user@1000.service) running even when nobody is
+  # logged into the GUI, so the home-manager Syncthing service syncs whenever
+  # the laptop is powered on -- not only while someone is logged in. Without
+  # this, at the SDDM greeter user@1000 tears down and the desktop sees the
+  # laptop as a disconnected Syncthing peer. (The desktop doesn't need this: it
+  # stays logged into i3, so its user manager is always alive.)
+  users.users.connor.linger = true;
+
   # Fresh install from the 25.11-era channel; leave at first-install release.
   system.stateVersion = "25.11";
 }
