@@ -184,6 +184,14 @@
           alerts = [ { type = "ntfy"; } ];
         }
         {
+          name = "immich";
+          group = "services";
+          url = "http://127.0.0.1:2283/api/server/ping";
+          interval = "60s";
+          conditions = [ "[STATUS] == 200" ];
+          alerts = [ { type = "ntfy"; } ];
+        }
+        {
           name = "cpu-temperature";
           group = "health";
           # Assert the CPU package (coretemp) stays under 85C — the thermal

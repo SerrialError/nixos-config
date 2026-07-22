@@ -142,6 +142,46 @@
   };
 
   ############################################################################
+  # Immich — self-hosted photo/video library, LAN-only.
+  #
+  # Like Navidrome, this is bound to all interfaces + firewall-opened so
+  # phones/clients on the home LAN reach it directly over HTTP; it is NOT put
+  # behind Caddy (Caddy's only cert path here is Cloudflare DNS-01 for
+  # jumpsquad.org, and this service is deliberately never public). Blocky maps
+  # `immich.home` -> this box's LAN IP for a friendly in-house URL; the mobile
+  # app is happy with plain `http://immich.home:2283` (or the raw IP).
+  #
+  # On stateVersion 25.11 the module defaults to the VectorChord Postgres
+  # extension (database.enableVectorChord = true, enableVectors = false), which
+  # is the modern path and avoids the pgvecto.rs / PostgreSQL-17 assertion. With
+  # the default unix-socket DB no secrets file is required, so there's no agenix
+  # secret to wire in. The module provisions Postgres + Redis itself.
+  #
+  # Machine learning (face recognition / smart search / OCR) is DISABLED: it is
+  # the heaviest component and this is a 2GB Core 2 Duo already running
+  # Vaultwarden + the monitoring stack. Can be enabled later once we've seen how
+  # the core service behaves under load.
+  ############################################################################
+  services.immich = {
+    enable = true;
+    host = "0.0.0.0"; # LAN-reachable, like Navidrome
+    port = 2283;
+    openFirewall = true; # opens 2283/tcp
+    mediaLocation = "/var/lib/immich"; # module's StateDirectory; on the OS disk
+    machine-learning.enable = false;
+  };
+
+  # Memory backstop for the Immich process group. The module puts immich-server
+  # in its own `system-immich.slice`; cap it so that under memory pressure on
+  # this 2GB box Immich is the OOM victim, never Vaultwarden. MemoryHigh
+  # throttles+reclaims (soft) first; MemoryMax is the hard ceiling. Tunable —
+  # raise if Immich thrashes/restarts during large imports. # 2GB
+  systemd.slices.system-immich.sliceConfig = {
+    MemoryHigh = "700M";
+    MemoryMax = "900M";
+  };
+
+  ############################################################################
   # Blocky — DNS ad/tracker blocking for the LAN, listening on :53.
   ############################################################################
   services.blocky = {
@@ -155,6 +195,10 @@
       ];
       # Needed to resolve the DoT upstream's hostname at startup.
       bootstrapDns = "tcp+udp:9.9.9.9";
+      # Split-horizon record: resolve the Immich hostname to this box's LAN IP
+      # for in-house devices. The .245 address is DHCP-assigned today — keep a
+      # router DHCP reservation for it so this mapping stays correct.
+      customDNS.mapping."immich.home" = "192.168.1.245";
       blocking = {
         denylists.ads = [
           "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
