@@ -147,10 +147,19 @@ in
         zone-type = "x86_pkg_temp";
         base-temperature = 20;
         warn-temperature = 60;
+        # "CPU" lives in a colored prefix (not the label) so the letters render
+        # in primary/yellow like the VOL and GPU labels, while the temperature
+        # itself stays default-foreground.
+        format = "<label>";
+        format-prefix = "CPU ";
+        format-prefix-foreground = "\${colors.primary}";
+        format-warn = "<label-warn>";
+        format-warn-prefix = "CPU ";
+        format-warn-prefix-foreground = "\${colors.primary}";
         # Pin both normal and warn labels to Fahrenheit — label-warn defaults
         # to Celsius, which caused the F/C flip once the CPU crossed 60C.
-        label = "CPU %temperature-f%";
-        label-warn = "CPU %temperature-f%";
+        label = "%temperature-f%";
+        label-warn = "%temperature-f%";
       };
 
       "module/gputemp" = {
@@ -199,9 +208,17 @@ in
         adapter = "ADP0";
         full-at = 99;
         poll-interval = 5;
+        # "BAT" prefix in primary/yellow so the battery reading is labelled and
+        # can't be mistaken for the brightness percentage next to it.
         format-charging = "<animation-charging> <label-charging>";
+        format-charging-prefix = "BAT ";
+        format-charging-prefix-foreground = "\${colors.primary}";
         format-discharging = "<ramp-capacity> <label-discharging>";
+        format-discharging-prefix = "BAT ";
+        format-discharging-prefix-foreground = "\${colors.primary}";
         format-full = "<ramp-capacity> <label-full>";
+        format-full-prefix = "BAT ";
+        format-full-prefix-foreground = "\${colors.primary}";
         label-charging = "%percentage%%";
         label-discharging = "%percentage%%";
         label-full = "%percentage%%";
@@ -227,7 +244,11 @@ in
         card = "intel_backlight";
         use-actual-brightness = true;
         enable-scroll = true;
+        # "BRI" prefix in primary/yellow, matching the BAT/CPU/VOL labels, so
+        # the brightness percentage is distinguishable from the battery one.
         format = "<ramp> <label>";
+        format-prefix = "BRI ";
+        format-prefix-foreground = "\${colors.primary}";
         label = "%percentage%%";
         ramp-0 = "";
         ramp-1 = "";

@@ -13,4 +13,9 @@ c=$("$smi" --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null
 [[ "$c" =~ ^[0-9]+$ ]] || exit 0
 
 f=$((c * 9 / 5 + 32))
-echo "GPU ${f}°F"
+# %{F#..} is a polybar color tag; colour "GPU" in primary (#F0C674, mirrors
+# colors.primary in home/polybar.nix) to match the yellow CPU/VOL labels.
+# Emitting the label from the script (rather than a module format-prefix)
+# keeps the module silent when nvidia-smi has no reading -- empty output hides
+# the whole thing, prefix included.
+echo "%{F#F0C674}GPU%{F-} ${f}°F"
