@@ -4,6 +4,10 @@ let
   # server). agenix accepts ssh-ed25519 keys directly; the server decrypts its
   # secrets at activation with the matching host private key.
   server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA3qLEFR4AVnU8/CaJY4E+r7vlrWh88bemK5Cn2/3oHp root@nixos";
+  # Laptop host key (`cat /etc/ssh/ssh_host_ed25519_key.pub` on the laptop).
+  # agenix decrypts the laptop's secrets at activation with the matching host
+  # private key.
+  laptop = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnrjB/+1+sKIZKgyVKkZ104p1ok5GCSH5lkPTPfAmEf root@nixos";
 in
 {
   # Authorized SSH keys, decrypted on every host for connor's authorized_keys
@@ -11,6 +15,7 @@ in
   "ssh-auth-keys.age".publicKeys = [
     primary
     server
+    laptop
   ];
   # Personal notes / master passwords (Bitwarden, Gmail, …). Readable by user connor at /run/agenix/passwords.
   "passwords.age".publicKeys = [ primary ];
