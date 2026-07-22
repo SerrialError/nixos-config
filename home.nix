@@ -183,6 +183,30 @@ in
         "text/x-tex"
       ];
     };
+
+    # Steam/Heroic only drop game shortcuts in ~/Desktop, which rofi's `drun`
+    # never scans (it reads XDG_DATA_HOME/applications). Declare the two games
+    # here so they always show up in the launcher regardless of client whims.
+    desktopEntries.counter-strike-2 = {
+      name = "Counter-Strike 2";
+      comment = "Play this game on Steam";
+      exec = "steam steam://rungameid/730";
+      icon = "steam_icon_730";
+      terminal = false;
+      type = "Application";
+      categories = [ "Game" ];
+    };
+    # Rocket League is an Epic title run through Heroic (legendary appName
+    # "Sugar"); launch via the heroic:// URL handler, not Steam.
+    desktopEntries.rocket-league = {
+      name = "Rocket League";
+      comment = "Play this game via Heroic";
+      exec = ''xdg-open "heroic://launch?appName=Sugar&runner=legendary"'';
+      icon = "/home/connor/.config/heroic/icons/Sugar.jpg";
+      terminal = false;
+      type = "Application";
+      categories = [ "Game" ];
+    };
   };
 
   # zsh is the primary interactive shell (see users.users.connor.shell).
