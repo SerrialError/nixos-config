@@ -11,6 +11,10 @@ let
   # The same home config is shared by the desktop and the laptop; a couple of
   # options (currently just Syncthing's peer topology) differ between them.
   isLaptop = osConfig.networking.hostName == "laptop";
+  # Flake attr for this host, so the `nrs`/`nrb` aliases rebuild the machine
+  # they run on. The desktop's attr is `default` (hostname `nixos`), not its
+  # hostname — see CLAUDE.md.
+  flakeHost = if isLaptop then "laptop" else "default";
 in
 {
   imports = [
@@ -225,9 +229,12 @@ in
       share = true;
     };
     shellAliases = {
-      # rebuild, piping the build log through nix-output-monitor
-      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#default --impure |& nom";
-      nrb = "sudo nixos-rebuild build --flake /home/connor/git/nixos-config#default --impure |& nom";
+      # rebuild, piping the build log through nix-output-monitor. The flake
+      # target follows the host this shell runs on, so `nrs` on the laptop
+      # builds .#laptop (not .#default, whose /mnt storage mounts don't exist
+      # here and fail the build).
+      nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#${flakeHost} --impure |& nom";
+      nrb = "sudo nixos-rebuild build --flake /home/connor/git/nixos-config#${flakeHost} --impure |& nom";
       # server: build locally / deploy over SSH. sudo is needed because the
       # eval reads the root-only agenix keyfile (--impure); --preserve-env
       # keeps connor's ssh-agent usable for the remote hop.
