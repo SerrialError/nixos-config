@@ -68,6 +68,61 @@ reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time.
 - `secrets/`: agenix secrets + recipient rules (`secrets.nix`)
 - Neovim is configured via the `nvf` flake input under `programs.nvf` in `home.nix`
 
+## Bringing up a new host
+
+The goal is "clone and rebuild", and for an **already-provisioned** host that
+is exactly it — on the machine:
+
+```bash
+git clone https://github.com/SerrialError/nixos-config.git ~/git/nixos-config
+sudo nixos-rebuild switch --flake ~/git/nixos-config#<host> --impure
+```
+
+A *brand-new* machine needs three one-time things first, because of how this
+repo wires up secrets. The `Server` and `Laptop` sections below are the
+concrete, tested runbooks; this is the "why" behind them so you can adapt to a
+fourth host.
+
+1. **Add the host as a new flake output** (`nixosConfigurations.<host>` in
+   `flake.nix`) with its own `hosts/<host>/` dir. Copy the machine's
+   `nixos-generate-config` scan into `hosts/<host>/hardware-configuration.nix`
+   (the flake output can't build without a real scan).
+
+2. **Make the host an agenix recipient, then rekey.** Secrets in `secrets/` are
+   age-encrypted to a fixed list of recipients; a fresh host can't decrypt them
+   until its key is on that list. Add the machine's SSH **host** public key
+   (`cat /etc/ssh/ssh_host_ed25519_key.pub`) as a recipient in
+   `secrets/secrets.nix` and to the `publicKeys` of any secret the host needs
+   (at minimum `ssh-auth-keys.age`), then `cd secrets && agenix -r`. Host
+   *public* keys are safe to commit to this public repo.
+
+3. **First rebuild has a chicken-and-egg to break.** `--impure` is mandatory on
+   every rebuild here because `authorizedKeys.keyFiles` reads the
+   agenix-decrypted `/run/agenix/ssh-auth-keys` at **eval** time — but on a
+   fresh host that file doesn't exist until agenix has activated once, so the
+   very first eval fails. Two ways through, both used below:
+   - deploy **from another machine as `root@`** with `nixos-rebuild boot` +
+     reboot (agenix activates on that boot and creates the keyfile), or
+   - pre-seed the file on the target (`install -Dm600` the decrypted key to
+     `/run/agenix/ssh-auth-keys`) so the first local build can eval. On reboot
+     `/run` (tmpfs) is wiped and agenix recreates it from the host key.
+
+   Use `boot` + reboot rather than a live `switch` for the first activation: a
+   live switch across the systemd major version from the install ISO can wedge
+   `switch-to-configuration`, and a live switch also drops the SSH session
+   mid-activation.
+
+4. **`connor` isn't nix-trusted until the config is applied.** `trusted-users`
+   only gains `connor` once this config is live, so a `connor@ --target-host`
+   push to a stock machine is rejected as unsigned. That's why the first deploy
+   runs as `root@` (or builds locally on the target); afterwards `connor@`
+   works.
+
+> Flake note: because this is a git repo, `nixos-rebuild --flake .#…` only sees
+> **tracked or staged** files. A new `hosts/<host>/` dir (or an edited
+> `hardware-configuration.nix`) that you haven't `git add`ed is silently
+> invisible to the build. `git add` before you rebuild.
+
 ## Server: one-time bootstrap
 
 Dress-rehearsed against a quickemu VM on the `vm-test` branch; the numbers

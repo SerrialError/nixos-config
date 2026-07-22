@@ -40,6 +40,18 @@ There is no test suite or linter — validation is `nixos-rebuild build` succeed
 
 - **Validate changes without sudo** by evaluating the config directly, e.g. `nix eval --impure --expr '(builtins.getFlake "/home/connor/git/nixos-config").nixosConfigurations.default.config…'` (or the `home-manager.users.connor` attrs). This catches Nix eval errors, option typos, and lets you inspect the resulting values.
 - **Hand the actual rebuild to the user** — after your edits evaluate cleanly, ask them to run `nrs` (or `nrb` to preview). Do not report a change as "done/working" based on your own build; you can't run one. Wait for the user to confirm the rebuild succeeded before committing.
+- **Remote sudo *does* work.** The TTY limit above is specific to the local desktop. When driving another host over SSH, `echo "$PW" | ssh <host> 'sudo -S <cmd>'` works — `sudo -S` reads the password from stdin, no interactive TTY needed. So you *can* run remote rebuilds / `systemctl` on the laptop or server yourself.
+
+### Bringing up a new host (gotchas)
+
+See the README "Bringing up a new host" section for the full flow. The traps that cost time:
+
+- **agenix keyFiles pre-seed.** On a *fresh* host the first `--impure` eval fails because `authorizedKeys.keyFiles` reads `/run/agenix/ssh-auth-keys` at eval time and that file doesn't exist until agenix has activated once. Break it by deploying from another machine as `root@` (`nixos-rebuild boot` + reboot), or pre-seed the decrypted key to `/run/agenix/ssh-auth-keys` (mode 0600) so the first local build can eval. `/run` is tmpfs — the seed vanishes on reboot and agenix recreates it from the host key.
+- **Recipient + rekey before first deploy.** A new host can't decrypt any secret until its SSH *host public* key is a recipient in `secrets/secrets.nix` (and on the secret's `publicKeys`); then `cd secrets && agenix -r`. Host public keys are safe in this public repo; never commit private keys or decrypted payloads.
+- **`connor` isn't nix-trusted until this config is live**, so a `connor@ --target-host` push to a stock machine is rejected as unsigned. First deploy as `root@` (or build locally on the target as root); `connor@` works after.
+- **First activation: `boot` + reboot, not `switch`.** A live switch across the systemd major version from the install ISO can wedge `switch-to-configuration`, and it also drops the SSH session mid-activation.
+- **Git-flake visibility.** `nixos-rebuild --flake .#…` on a git repo only sees tracked/staged files. A new `hosts/<host>/` or an edited `hardware-configuration.nix` that isn't `git add`ed is invisible to the build — `git add` before rebuilding.
+- **X `inputClassSections` need an X restart.** X reads InputClass rules only at server start, so changes to `services.xserver.inputClassSections` apply only after a reboot or `systemctl restart display-manager` — a plain rebuild won't. X logs to journald here (`xserver-wrapper[…]`); grep it to confirm a device was matched/ignored.
 
 ## Architecture
 
