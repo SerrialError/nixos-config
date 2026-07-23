@@ -58,9 +58,17 @@
   # (home/lockscreen.nix: xss-lock + betterlockscreen) registers a logind sleep
   # inhibitor, so the screen locks *before* the machine sleeps and the laptop
   # demands the password on resume. Contrast the server, which ignores the lid.
+  #
+  # HoldoffTimeoutSec: after every resume logind ignores lid events for this
+  # long (systemd default 30s, intended for dock detection). At the 30s default,
+  # closing the lid again within half a minute of waking did nothing — no
+  # suspend, no lock — so a quick close/reopen left the desktop unlocked. Shrink
+  # it to 2s so a second lid-close reliably suspends-and-locks; 2s still covers a
+  # spurious lid event fired at the instant of resume.
   services.logind.settings.Login = {
     HandleLidSwitch = "suspend";
     HandleLidSwitchExternalPower = "suspend";
+    HoldoffTimeoutSec = "2s";
   };
 
   # Laptop power management (Intel). powerManagement.enable pulls in the suspend
