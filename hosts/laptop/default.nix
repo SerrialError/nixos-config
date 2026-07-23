@@ -13,8 +13,8 @@
     ./hardware-configuration.nix
     # Shared graphical desktop (also pulls in modules/common.nix).
     ../../profiles/desktop.nix
-    # On-demand WireGuard client to the home LAN.
-    ./wireguard.nix
+    # NetworkManager VPN profiles (on-demand WireGuard home tunnel).
+    ./vpn.nix
   ];
 
   networking.hostName = "laptop";
