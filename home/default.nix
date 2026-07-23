@@ -3,6 +3,7 @@
 {
   imports = [
     ./alacritty.nix
+    ./floorp.nix
     ./gtk.nix
     ./i3.nix
     ./lf.nix

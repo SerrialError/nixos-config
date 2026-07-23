@@ -258,7 +258,7 @@ in
     nitch
     lutris
     code-cursor
-    floorp-bin
+    # floorp-bin is installed by programs.floorp (home/floorp.nix), not here.
     inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
     clang
     sioyek

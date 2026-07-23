@@ -1,0 +1,11 @@
+@charset "UTF-8";
+/* Floorp userChrome.css — declaratively managed by home/floorp.nix.
+ *
+ * Empty for now (the live profile had no custom chrome rules). This file is a
+ * git-tracked hook: add chrome-privileged UI tweaks under the @-moz-document
+ * block and they apply on every host after a rebuild. Requires
+ * toolkit.legacyUserProfileCustomizations.stylesheets = true (set in floorp.nix).
+ */
+@-moz-document url(chrome://browser/content/browser.xhtml) {
+  /* custom chrome rules go here */
+}
