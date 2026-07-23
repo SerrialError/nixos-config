@@ -23,6 +23,12 @@ in
     primary
     laptop
   ];
+  # WireGuard client private key for the laptop's wg0 interface (full tunnel to
+  # the home LAN). Decrypted on the laptop, read by wg-quick as root.
+  "wg-laptop-private.age".publicKeys = [
+    primary
+    laptop
+  ];
   # Vaultwarden env file (ADMIN_TOKEN=<argon2id hash>), decrypted on the server.
   "vaultwarden-env.age".publicKeys = [
     primary
