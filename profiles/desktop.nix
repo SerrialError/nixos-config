@@ -245,6 +245,7 @@ in
     pkgs-unstable.pear-desktop # only packaged in nixpkgs-unstable
     nicotine-plus
     networkmanagerapplet
+    protonvpn-gui # official Proton VPN GTK app; drives NetworkManager, session in gnome-keyring
     blueman
     nlohmann_json
     glibc
