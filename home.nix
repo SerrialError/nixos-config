@@ -15,6 +15,18 @@ let
   # they run on. The desktop's attr is `default` (hostname `nixos`), not its
   # hostname — see CLAUDE.md.
   flakeHost = if isLaptop then "laptop" else "default";
+  # agenix decrypts with a per-host identity. The desktop has connor's user age
+  # key (keys.txt), readable without root. The laptop has no user age key — its
+  # recipient is the machine's SSH host key, which is root-only, so agenix must
+  # run under sudo there. EDITOR is passed explicitly because root's PATH lacks
+  # the per-user nvim (nvf bakes its config into that binary, so it still works
+  # as root). Everything that shells out to agenix uses this so neither the
+  # identity nor the sudo/editor dance has to be typed by hand.
+  agenixCmd =
+    if isLaptop then
+      "sudo EDITOR=/etc/profiles/per-user/connor/bin/nvim agenix -i /etc/ssh/ssh_host_ed25519_key"
+    else
+      "agenix -i /home/connor/.config/sops/age/keys.txt";
 in
 {
   imports = [
@@ -240,10 +252,8 @@ in
       # keeps connor's ssh-agent usable for the remote hop.
       srb = "sudo nixos-rebuild build --flake /home/connor/git/nixos-config#server --impure |& nom";
       srs = "sudo --preserve-env=SSH_AUTH_SOCK nixos-rebuild switch --flake /home/connor/git/nixos-config#server --impure --target-host connor@192.168.1.245 --sudo --ask-sudo-password";
-      # Always use the desktop's age identity for agenix. agenix only auto-finds
-      # SSH keys, but our recipient is the age key in keys.txt, so without this
-      # every `agenix -e`/`-r` needs an explicit `-i`.
-      agenix = "agenix -i /home/connor/.config/sops/age/keys.txt";
+      # Per-host agenix identity (see agenixCmd in the let block above).
+      agenix = agenixCmd;
       ls = "eza --icons --group-directories-first";
       ll = "eza -l --icons --git --group-directories-first";
       la = "eza -la --icons --git --group-directories-first";
@@ -267,15 +277,11 @@ in
       fastfetch
 
       pw()  { bat /run/agenix/passwords; }
-      pws() {
-        agenix -d "$HOME/git/nixos-config/secrets/passwords.age" \
-          -i "$HOME/.config/sops/age/keys.txt"
-      }
+      pws() { ${agenixCmd} -d "$HOME/git/nixos-config/secrets/passwords.age"; }
       pwe() {
         (
           cd "$HOME/git/nixos-config/secrets" || return 1
-          RULES=./secrets.nix agenix -e passwords.age \
-            -i "$HOME/.config/sops/age/keys.txt"
+          ${agenixCmd} -e passwords.age
         ) && echo "Saved. Run 'nrs' to refresh /run/agenix/passwords, or 'pws' to read the .age file."
       }
 
