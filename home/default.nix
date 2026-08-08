@@ -10,6 +10,7 @@
     ./lockscreen.nix
     ./music.nix
     ./polybar.nix
+    ./taskwarrior.nix
     ./tmux.nix
   ];
 }
