@@ -58,6 +58,15 @@ in
     owner = "git";
     mode = "0440"; # Read-only for owner and group
   };
+  # Taskwarrior TaskChampion sync secret — a single
+  # `sync.encryption_secret=<value>` line, `include`d by the taskrc (see
+  # home/taskwarrior.nix). Kept out of programs.taskwarrior.config because that
+  # is written to the world-readable nix store, and this repo is public. Owned
+  # by connor so taskwarrior (a user process) can read it.
+  age.secrets.task-sync-secret = {
+    file = ../../secrets/task-sync-secret.age;
+    owner = "connor";
+  };
   # Dedicated key for deploying to / logging into the home server, generated
   # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
   # server Host block so it isn't offered to unrelated hosts like GitHub;

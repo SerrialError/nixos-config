@@ -182,6 +182,36 @@
   };
 
   ############################################################################
+  # Taskwarrior sync (TaskChampion) — LAN/WireGuard-only, like Navidrome/Immich.
+  #
+  # Plain HTTP; task data is end-to-end encrypted by the clients (the server
+  # only ever stores ciphertext), so no TLS/Caddy vhost is needed and this is
+  # deliberately NOT public. Reached by the desktop directly on the LAN and by
+  # the phone over the router's WireGuard tunnel (WG clients route to this LAN).
+  #
+  # In TaskChampion the client_id identifies the shared *task list*, not the
+  # device: every replica that shares tasks uses the SAME client_id and the same
+  # encryption_secret ("configure a new replica identically to the existing
+  # one"). So this is one id for all of connor's devices, not one per device.
+  # It is not secret; the shared encryption_secret lives in agenix on the
+  # desktop and is typed into the phone app, never here.
+  ############################################################################
+  services.taskchampion-sync-server = {
+    enable = true;
+    host = "0.0.0.0"; # LAN-reachable, like Navidrome/Immich
+    port = 10222; # 8080 is taken by Gatus (see monitoring.nix)
+    openFirewall = true; # opens 10222/tcp
+    allowClientIds = [
+      "5a1322be-3f3a-4354-a430-90b9325ddb41" # connor's task list (all devices)
+    ];
+  };
+  # TEMP diagnostic: the server uses env_logger + actix's Logger middleware, so
+  # RUST_LOG=info makes it log every HTTP request (method, path, status). Used
+  # to see whether the phone's sync requests arrive and how the server answers.
+  # Remove once phone sync is confirmed working.
+  systemd.services.taskchampion-sync-server.environment.RUST_LOG = "info";
+
+  ############################################################################
   # Blocky — DNS ad/tracker blocking for the LAN, listening on :53.
   ############################################################################
   services.blocky = {

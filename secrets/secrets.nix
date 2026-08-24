@@ -64,4 +64,10 @@ in
     primary
     server
   ];
+  # Taskwarrior TaskChampion sync secret: a single
+  # `sync.encryption_secret=<value>` line, decrypted on the desktop and
+  # included by the taskrc. The same secret is typed into the phone's Taskchamp
+  # app. Desktop-only — the server only ever stores ciphertext, so the shared
+  # key never needs to live there.
+  "task-sync-secret.age".publicKeys = [ primary ];
 }
