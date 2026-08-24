@@ -232,6 +232,9 @@ in
     syntaxHighlighting.enable = true; # fish-style command highlighting
     enableCompletion = true;
     autocd = true;
+    # Type the start of a past command (e.g. `ssh 192.168`) and press Up/Down
+    # to cycle only the history entries matching what's typed so far.
+    historySubstringSearch.enable = true;
     history = {
       size = 100000;
       save = 100000;
@@ -488,6 +491,14 @@ in
         treesitter = {
           grammars = [ ];
         };
+        # nvf pins rustaceanvim (via its npins) at a rev that hard-requires
+        # Neovim 0.12; stable nixpkgs ships 0.11.7, so its toml/rust ftplugins
+        # abort with "requires Neovim 0.12 or above" on every .toml buffer.
+        # Override it with nixpkgs' own rustaceanvim (6.9.7), which only guards
+        # on nvim-0.11 and thus works here -- and stays in lockstep with the
+        # nixpkgs Neovim across channel bumps. Drop this once nvf's pin (or a
+        # future nixpkgs Neovim) no longer straddles the 0.11/0.12 boundary.
+        pluginOverrides.rustaceanvim = pkgs.vimPlugins.rustaceanvim;
         # nvf's vim.maps -> vim.keymaps migration shim is buggy: its
         # `config.vim.keymaps = mkMerge [ (pipe cfg.maps ...) ]` maps over all
         # vim.maps.* sub-options, which upstream declares WITHOUT a default.
