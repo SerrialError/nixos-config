@@ -23,15 +23,24 @@ let
     name = "polybar-gputemp";
     text = builtins.readFile ../scripts/polybar-gputemp.sh;
   };
+  # Flatpak update counter; needs flatpak + awk on the service's minimal PATH.
+  polybar-flatpak = pkgs.writeShellApplication {
+    name = "polybar-flatpak";
+    runtimeInputs = with pkgs; [
+      flatpak
+      gawk
+    ];
+    text = builtins.readFile ../scripts/polybar-flatpak.sh;
+  };
 
   # The desktop and laptop share this bar; a few modules are host-specific.
   # The laptop swaps the NVIDIA gputemp module for a battery indicator.
   isLaptop = osConfig.networking.hostName == "laptop";
   modulesRight =
     if isLaptop then
-      "mpd updates temperature backlight pulseaudio battery date"
+      "mpd updates flatpak temperature backlight pulseaudio battery date"
     else
-      "mpd updates temperature gputemp pulseaudio date";
+      "mpd updates flatpak temperature gputemp pulseaudio date";
   # polybar reads the CPU temperature by thermal-zone index, and x86_pkg_temp
   # sits at a different index on each machine (zone 2 on the desktop, zone 7 on
   # the laptop), so the index must be chosen per host.
@@ -177,6 +186,15 @@ in
         exec = "${polybar-updates}/bin/polybar-updates";
         interval = 3600;
         click-left = "${polybar-updates}/bin/polybar-updates";
+      };
+
+      # Green "Flatpak OK" when every installed Flatpak is current, or yellow
+      # "Flatpak: N" when N have updates. Polled hourly; click to re-check.
+      "module/flatpak" = {
+        type = "custom/script";
+        exec = "${polybar-flatpak}/bin/polybar-flatpak";
+        interval = 3600;
+        click-left = "${polybar-flatpak}/bin/polybar-flatpak";
       };
 
       "module/mpd" = {
