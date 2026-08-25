@@ -31,6 +31,9 @@
       package = pkgs.adw-gtk3;
       name = "adw-gtk3-dark";
     };
+    # Keep the pre-26.05 default (gtk4 inherits gtk.theme). home-manager 26.05
+    # changed this default to null; pin it so GTK4 apps stay themed as before.
+    gtk4.theme = config.gtk.theme;
     gtk2.configLocation = "${config.xdg.configHome}/gtk-2.0/gtkrc";
     gtk3.extraConfig = {
       # Plain GTK3 honors this; libadwaita/GTK4 do not (see gtk4 below).

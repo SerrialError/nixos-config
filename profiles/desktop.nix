@@ -259,6 +259,10 @@ in
     chromium
     sddm-astronaut # the themeConfig-overridden theme from the let-block above
     pavucontrol
+    # Classic multilib WoW build (32-bit + 64-bit). Do NOT switch to
+    # wineWow64Packages.stable: that is the experimental 32-on-64 "wow64" mode
+    # without real multilib, which breaks EAC/BattlEye anti-cheat and DXVK for
+    # games launched with system wine (e.g. Rocket League via Heroic).
     wineWowPackages.stable
     winetricks
     element-desktop
@@ -267,7 +271,7 @@ in
     pkgs-unstable.pear-desktop # only packaged in nixpkgs-unstable
     nicotine-plus
     networkmanagerapplet
-    protonvpn-gui # official Proton VPN GTK app; drives NetworkManager, session in gnome-keyring
+    proton-vpn # official Proton VPN GTK app; drives NetworkManager, session in gnome-keyring
     blueman
     nlohmann_json
     glibc
@@ -317,7 +321,7 @@ in
     # NixOS quality-of-life
     nix-output-monitor
     nvd # diff system generations after a rebuild
-    nixfmt-rfc-style # formatter for this repo
+    nixfmt # formatter for this repo (nixfmt-rfc-style is now an alias of this)
     comma # run any nixpkgs binary once: `, <cmd>`
 
     # i3 / desktop control
@@ -330,7 +334,7 @@ in
   programs.mtr.enable = true;
   programs.thunar = {
     enable = true;
-    plugins = with pkgs.xfce; [
+    plugins = with pkgs; [
       thunar-archive-plugin
       thunar-volman
     ];

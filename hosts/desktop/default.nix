@@ -122,8 +122,14 @@ in
     # accessible via `nvidia-settings`.
     # nvidiaSettings = true;
 
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    # package = config.boot.kernelPackages.nvidiaPackages.latest;
+    # Pin the 580 "Legacy" driver. As of NixOS 26.05 the default nvidia
+    # package is 595.71.05, which DROPPED support for this Pascal GTX 1080 Ti
+    # ("The 595.71.05 NVIDIA driver will ignore ... No NVIDIA GPU found" →
+    # nvidia_modeset fails to load → X starts with no screen → SDDM shows a
+    # bare console instead of the greeter). Pascal is now only supported by the
+    # 580.xx branch. 25.11 still defaulted to 580, which is why it worked there.
+    # Revisit if this card is retired or nixpkgs changes the legacy split.
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
   };
 
   # Desktop-only git-shell server: hosts bare repos, reachable over SSH.

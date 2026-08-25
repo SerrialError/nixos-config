@@ -77,6 +77,10 @@ in
     userDirs = {
       enable = true;
       createDirectories = true;
+      # Keep the pre-26.05 default: export XDG_* dirs as session variables.
+      # home-manager 26.05 flipped this default to false; pin true to preserve
+      # the exported vars that scripts/apps here rely on.
+      setSessionVariables = true;
       documents = "$HOME/Documents";
       download = "$HOME/Downloads";
       music = "$HOME/Music";
@@ -228,6 +232,10 @@ in
   # zsh is the primary interactive shell (see users.users.connor.shell).
   programs.zsh = {
     enable = true;
+    # Keep zsh's dotfiles in $HOME (the pre-26.05 default). home-manager warns
+    # the default will move to $XDG_CONFIG_HOME/zsh in a future release; pin the
+    # home dir so the dotfile location doesn't shift out from under us.
+    dotDir = config.home.homeDirectory;
     autosuggestion.enable = true; # fish-style inline suggestions
     syntaxHighlighting.enable = true; # fish-style command highlighting
     enableCompletion = true;
@@ -631,9 +639,6 @@ in
     };
   };
   programs.claude-code = {
-    enable = true;
-  };
-  programs.gemini-cli = {
     enable = true;
   };
   home.packages = [
