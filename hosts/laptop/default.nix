@@ -36,13 +36,13 @@
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
   '';
 
-  # The built-in trackpad (I2C HID "CRQ1080…", exposed as both a Touchpad and a
-  # Mouse node) is physically broken and fires spurious input, so tell X to
-  # ignore both of its nodes. The external USB mouse and keyboard are unaffected.
+  # Ignore the built-in touchscreen (I2C HID "GTCH7503…", a G2Touch direct
+  # touch controller). The trackpad ("CRQ1080…") is left enabled; the external
+  # USB mouse and keyboard are unaffected.
   services.xserver.inputClassSections = [
     ''
-      Identifier "disable-broken-trackpad"
-      MatchProduct "CRQ1080"
+      Identifier "disable-touchscreen"
+      MatchProduct "GTCH7503"
       Option "Ignore" "on"
     ''
   ];
