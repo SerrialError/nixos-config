@@ -49,6 +49,28 @@ in
     mode = "0400";
   };
 
+  # Shared GitHub SSH key, decrypted to /run/agenix/github-ssh for connor.
+  # One key for every graphical host (see secrets/secrets.nix) so git over SSH
+  # works identically on desktop and laptop with nothing device-specific to
+  # register — its public key just needs to be on the GitHub account once.
+  age.secrets.github-ssh = {
+    file = ../secrets/github-ssh.age;
+    owner = "connor";
+    mode = "0400";
+  };
+
+  # Use that shared key for github.com. IdentitiesOnly stops ssh from also
+  # offering any other keys/agent identities. The trailing `Host *` resets
+  # scope so nothing after this block (on the desktop, its own extraConfig for
+  # the server key; the generated libvirt Include) is captured by the block.
+  programs.ssh.extraConfig = ''
+    Host github.com
+      IdentityFile /run/agenix/github-ssh
+      IdentitiesOnly yes
+
+    Host *
+  '';
+
   # UEFI boot on both machines. The desktop adds NVIDIA kernel params on top.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

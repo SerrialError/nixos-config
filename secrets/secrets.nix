@@ -23,6 +23,14 @@ in
     primary
     laptop
   ];
+  # Shared GitHub SSH auth key (ed25519 private key). One identity for every
+  # graphical host so cloning/pushing works identically on desktop and laptop —
+  # no per-device key to register or lose. Decrypted for connor and used as the
+  # ssh IdentityFile for github.com (see profiles/desktop.nix).
+  "github-ssh.age".publicKeys = [
+    primary
+    laptop
+  ];
   # WireGuard client private key for the laptop's wg0 interface (full tunnel to
   # the home LAN). Decrypted on the laptop, read by wg-quick as root.
   "wg-laptop-private.age".publicKeys = [
