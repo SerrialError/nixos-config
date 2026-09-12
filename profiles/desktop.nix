@@ -228,7 +228,6 @@ in
     obs-studio
     libreoffice
     gnucash
-    claude-monitor
     heroic
     gdb
     polkit_gnome
@@ -251,12 +250,18 @@ in
     docker-compose
     qemu
     lxappearance
+    # AI tools — all pulled from nixpkgs-unstable so they can be updated on their
+    # own fast cadence (`nix flake update nixpkgs-unstable`) without bumping the
+    # stable system; these CLIs/editors release very frequently. cursor-cli and
+    # code-cursor aren't cached (quick binary repackage, not a compile); the rest
+    # are cached in unstable.
     pkgs-unstable.t3code
-    # AI coding CLIs / git tooling
-    cursor-cli
-    opencode
-    github-desktop
-    pkgs-unstable.grok-cli # only packaged in nixpkgs-unstable
+    pkgs-unstable.grok-cli
+    pkgs-unstable.claude-monitor
+    pkgs-unstable.cursor-cli
+    pkgs-unstable.opencode
+    pkgs-unstable.code-cursor
+    github-desktop # git tooling (not AI); stable channel is fine
     openrocket
     chromium
     sddm-astronaut # the themeConfig-overridden theme from the let-block above
@@ -287,7 +292,6 @@ in
     mpv
     nitch
     lutris
-    code-cursor
     # floorp-bin is installed by programs.floorp (home/floorp.nix), not here.
     inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
     clang

@@ -27,6 +27,14 @@ let
       "sudo EDITOR=/etc/profiles/per-user/connor/bin/nvim agenix -i /etc/ssh/ssh_host_ed25519_key"
     else
       "agenix -i /home/connor/.config/sops/age/keys.txt";
+  # nixpkgs-unstable for user programs that release very frequently (currently
+  # just Claude Code — see programs.claude-code below), so `nu` can update them
+  # on their own fast lane without bumping the stable system. Inherits the
+  # system nixpkgs config (allowUnfree etc.) via pkgs.config.
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    inherit (pkgs) config;
+  };
 in
 {
   imports = [
@@ -258,6 +266,10 @@ in
       # here and fail the build).
       nrs = "sudo nixos-rebuild switch --flake /home/connor/git/nixos-config#${flakeHost} --impure |& nom";
       nrb = "sudo nixos-rebuild build --flake /home/connor/git/nixos-config#${flakeHost} --impure |& nom";
+      # AI fast lane: bump only the nixpkgs-unstable input (where the AI
+      # CLIs/editors live — see profiles/desktop.nix) and rebuild, leaving the
+      # stable system on its own slower `nix flake update nixpkgs` cadence.
+      nu = "nix flake update nixpkgs-unstable --flake /home/connor/git/nixos-config && nrs";
       # server: build locally / deploy over SSH. sudo is needed because the
       # eval reads the root-only agenix keyfile (--impure); --preserve-env
       # keeps connor's ssh-agent usable for the remote hop.
@@ -640,6 +652,9 @@ in
   };
   programs.claude-code = {
     enable = true;
+    # Track nixpkgs-unstable (updated via `nu`): Claude Code ships new versions
+    # near-daily, faster than the stable channel follows.
+    package = pkgs-unstable.claude-code;
   };
   home.packages = [
     pkgs.devenv
