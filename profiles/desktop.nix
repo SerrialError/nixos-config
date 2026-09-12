@@ -235,7 +235,9 @@ in
     gimp
     vscode
     prismlauncher
-    grayjay
+    # grayjay is installed as a Flatpak (app.grayjay.Grayjay), not here: it is
+    # unfree (Source First License) so it is never in the binary cache and would
+    # recompile from source (.NET + npm frontend) on every version bump.
     cups-printers
     libnotify
     feh
