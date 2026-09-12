@@ -259,11 +259,12 @@ in
     chromium
     sddm-astronaut # the themeConfig-overridden theme from the let-block above
     pavucontrol
-    # Classic multilib WoW build (32-bit + 64-bit). Do NOT switch to
-    # wineWow64Packages.stable: that is the experimental 32-on-64 "wow64" mode
-    # without real multilib, which breaks EAC/BattlEye anti-cheat and DXVK for
-    # games launched with system wine (e.g. Rocket League via Heroic).
-    wineWowPackages.stable
+    # wow64 build (single 64-bit wine that runs 32-bit apps). We use this
+    # rather than wineWowPackages.stable because upstream deprecated the classic
+    # multilib set, so it is no longer in the binary cache and would recompile
+    # from source (mingw cross-compile, tens of minutes) on every wine bump;
+    # wineWow64Packages IS cached and downloads instead.
+    wineWow64Packages.stable
     winetricks
     element-desktop
     dconf
