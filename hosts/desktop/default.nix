@@ -3,6 +3,7 @@
 # home-manager) lives in profiles/desktop.nix.
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -67,6 +68,52 @@ in
     file = ../../secrets/task-sync-secret.age;
     owner = "connor";
   };
+  # Browser remote desktop: x11vnc shares the live i3 session on :0 and noVNC
+  # (websockify serving the web client) proxies to it. Both bind 127.0.0.1
+  # only — reach them over an SSH tunnel; no firewall ports are opened. User
+  # services bound to graphical-session.target, so they start with the i3
+  # session and inherit the XAUTHORITY home-manager's xsession imports into the
+  # user manager (x11vnc runs as connor, no root/-auth guessing needed).
+  age.secrets.vnc-password = {
+    file = ../../secrets/vnc-password.age;
+    owner = "connor";
+    mode = "0400";
+  };
+  systemd.user.services.x11vnc = {
+    description = "x11vnc sharing the live X session on :0 (localhost only)";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    unitConfig.ConditionUser = "connor";
+    serviceConfig = {
+      # -passwdfile reads the plaintext password from the file's first line;
+      # -noipv6 keeps it off [::1]/[::] so 127.0.0.1:5900 is the only socket.
+      ExecStart = lib.concatStringsSep " " [
+        "${pkgs.x11vnc}/bin/x11vnc -display :0 -rfbport 5900"
+        "-listen 127.0.0.1 -localhost -noipv6"
+        "-passwdfile ${config.age.secrets.vnc-password.path}"
+        "-forever -shared"
+      ];
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+  };
+  systemd.user.services.novnc = {
+    description = "noVNC web client + websockify proxy to x11vnc (localhost only)";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [
+      "graphical-session.target"
+      "x11vnc.service"
+    ];
+    unitConfig.ConditionUser = "connor";
+    serviceConfig = {
+      ExecStart = "${pkgs.python3Packages.websockify}/bin/websockify --web ${pkgs.novnc}/share/webapps/novnc 127.0.0.1:6080 127.0.0.1:5900";
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+  };
+
   # Dedicated key for deploying to / logging into the home server, generated
   # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
   # server Host block so it isn't offered to unrelated hosts like GitHub;
