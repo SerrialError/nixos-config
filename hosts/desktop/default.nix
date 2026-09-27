@@ -92,8 +92,9 @@ in
     owner = "connor";
   };
   # Browser remote desktop: x11vnc shares the live i3 session on :0 and noVNC
-  # (websockify serving the web client) proxies to it. Both bind 127.0.0.1
-  # only — reach them over an SSH tunnel; no firewall ports are opened. User
+  # (websockify serving the web client) proxies to it. x11vnc binds 127.0.0.1
+  # only; noVNC listens on all interfaces at :6080 so other LAN machines can
+  # open http://<desktop>:6080/vnc.html (VNC password still required). User
   # services bound to graphical-session.target, so they start with the i3
   # session and inherit the XAUTHORITY home-manager's xsession imports into the
   # user manager (x11vnc runs as connor, no root/-auth guessing needed).
@@ -131,7 +132,7 @@ in
     };
   };
   systemd.user.services.novnc = {
-    description = "noVNC web client + websockify proxy to x11vnc (localhost only)";
+    description = "noVNC web client + websockify proxy to x11vnc";
     wantedBy = [ "graphical-session.target" ];
     partOf = [ "graphical-session.target" ];
     after = [
@@ -140,7 +141,7 @@ in
     ];
     unitConfig.ConditionUser = "connor";
     serviceConfig = {
-      ExecStart = "${pkgs.python3Packages.websockify}/bin/websockify --web ${novnc-web} 127.0.0.1:6080 127.0.0.1:5900";
+      ExecStart = "${pkgs.python3Packages.websockify}/bin/websockify --web ${novnc-web} 0.0.0.0:6080 127.0.0.1:5900";
       Restart = "on-failure";
       RestartSec = 3;
     };
@@ -160,6 +161,9 @@ in
       default = "http_status:404";
     };
   };
+  # noVNC for LAN clients. The profile currently disables the firewall, so this
+  # only matters if it's re-enabled — kept so 6080 stays reachable then.
+  networking.firewall.allowedTCPPorts = [ 6080 ];
 
   # Dedicated key for deploying to / logging into the home server, generated
   # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
