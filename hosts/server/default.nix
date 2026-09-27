@@ -1,7 +1,20 @@
 # Home server: old x86_64 laptop running Vaultwarden and Blocky behind
 # Caddy. Deployed from the desktop (see README).
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
+let
+  # For the few server packages that stable no longer ships a usable version
+  # of (currently only Immich). Inherits the system nixpkgs.config.
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    system = pkgs.stdenv.hostPlatform.system;
+    inherit (config.nixpkgs) config;
+  };
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -32,7 +45,7 @@
     enable = true;
     package = pkgs.caddy.withPlugins {
       plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-      hash = "sha256-Q0lgI8MY90u/5R/xXBVPQWCZBN7dUZ0kcuDxD0xd0fo=";
+      hash = "sha256-dQvk6ezY6TQ1J7PjhCXnThF/SqVgPwBO8/RXzHCY+js=";
     };
     # All sites use DNS-01 via Cloudflare. The token comes from the agenix
     # secret wired into caddy's EnvironmentFile below.
@@ -157,6 +170,12 @@
   # the default unix-socket DB no secrets file is required, so there's no agenix
   # secret to wire in. The module provisions Postgres + Redis itself.
   #
+  # The package comes from nixpkgs-unstable: 26.05 ships only Immich 2.x, which
+  # is EOL and marked insecure (CVE-2026-59258, CVE-2026-82272). The 26.05
+  # module drives 3.x fine (same VectorChord). The 2 -> 3 DB migration is
+  # one-way, so there is no rolling back to a 2.x package afterwards. Drop the
+  # override once stable ships 3.x (NixOS 26.11).
+  #
   # Machine learning (face recognition / smart search / OCR) is DISABLED: it is
   # the heaviest component and this is a 2GB Core 2 Duo already running
   # Vaultwarden + the monitoring stack. Can be enabled later once we've seen how
@@ -164,6 +183,7 @@
   ############################################################################
   services.immich = {
     enable = true;
+    package = pkgs-unstable.immich;
     host = "0.0.0.0"; # LAN-reachable, like Navidrome
     port = 2283;
     openFirewall = true; # opens 2283/tcp
