@@ -24,6 +24,17 @@ let
   # quickgui bakes quickemu's store path into its PATH, so it ignores the
   # systemPackages swap above; override its quickemu input to the wrapper too.
   quickgui-spice = pkgs.quickgui.override { quickemu = quickemu-spice; };
+  # noVNC web client plus a defaults.json (read by vnc.html) defaulting the
+  # scaling mode to local scaling, so the whole desktop fits the browser window
+  # instead of rendering 1:1 with scrollbars. "remote" would instead resize the
+  # live X session itself, which we don't want for a shared desktop.
+  novnc-web = pkgs.symlinkJoin {
+    name = "novnc-web";
+    paths = [
+      "${pkgs.novnc}/share/webapps/novnc"
+      (pkgs.writeTextDir "defaults.json" (builtins.toJSON { resize = "scale"; }))
+    ];
+  };
 in
 {
   imports = [
@@ -108,7 +119,7 @@ in
     ];
     unitConfig.ConditionUser = "connor";
     serviceConfig = {
-      ExecStart = "${pkgs.python3Packages.websockify}/bin/websockify --web ${pkgs.novnc}/share/webapps/novnc 127.0.0.1:6080 127.0.0.1:5900";
+      ExecStart = "${pkgs.python3Packages.websockify}/bin/websockify --web ${novnc-web} 127.0.0.1:6080 127.0.0.1:5900";
       Restart = "on-failure";
       RestartSec = 3;
     };
