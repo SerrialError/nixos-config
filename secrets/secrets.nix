@@ -74,4 +74,8 @@ in
   # only). Plaintext, first line only — VNC auth uses at most 8 characters.
   # Decrypted on the desktop for connor, read by the x11vnc user service.
   "vnc-password.age".publicKeys = [ primary ];
+  # Cloudflare Tunnel `desk` credentials (~/.cloudflared/<UUID>.json from
+  # `cloudflared tunnel create desk`). Decrypted on the desktop, handed to the
+  # cloudflared service via LoadCredential.
+  "cloudflared-desk.age".publicKeys = [ primary ];
 }

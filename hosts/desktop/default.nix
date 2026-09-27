@@ -114,6 +114,21 @@ in
     };
   };
 
+  # Cloudflare Tunnel `desk`: publishes the noVNC client above at
+  # vnc.errormc.net (behind a Cloudflare Access policy). Outbound-only, so no
+  # firewall ports. The credentials secret stays root-only: the module runs
+  # cloudflared as a DynamicUser and passes the file in via LoadCredential.
+  # No cert.pem — that's only needed to create/route tunnels, not run one.
+  age.secrets.cloudflared-desk.file = ../../secrets/cloudflared-desk.age;
+  services.cloudflared = {
+    enable = true;
+    tunnels."b5ad1cc1-2472-48fd-84bb-1ce63fd015b1" = {
+      credentialsFile = config.age.secrets.cloudflared-desk.path;
+      ingress."vnc.errormc.net" = "http://127.0.0.1:6080";
+      default = "http_status:404";
+    };
+  };
+
   # Dedicated key for deploying to / logging into the home server, generated
   # locally as ~/.ssh/id_server_ed25519 (passphrase-protected). Scoped to the
   # server Host block so it isn't offered to unrelated hosts like GitHub;
