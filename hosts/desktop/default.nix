@@ -28,10 +28,22 @@ let
   # scaling mode to local scaling, so the whole desktop fits the browser window
   # instead of rendering 1:1 with scrollbars. "remote" would instead resize the
   # live X session itself, which we don't want for a shared desktop.
+  #
+  # The patch: on macOS/iOS noVNC sends an instant press+release for every key
+  # pressed while Cmd is held (Apple drops those key-ups), Shift included — so
+  # Cmd+Shift+p reached X as Super+p. Exempting Shift keeps it held, making
+  # i3's $mod+Shift bindings work from the iPad (Cmd = $mod via x11vnc -remap).
+  novnc = pkgs.novnc.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace core/input/keyboard.js --replace-fail \
+        "code !== 'MetaLeft' && code !== 'MetaRight'" \
+        "code !== 'MetaLeft' && code !== 'MetaRight' && code !== 'ShiftLeft' && code !== 'ShiftRight'"
+    '';
+  });
   novnc-web = pkgs.symlinkJoin {
     name = "novnc-web";
     paths = [
-      "${pkgs.novnc}/share/webapps/novnc"
+      "${novnc}/share/webapps/novnc"
       (pkgs.writeTextDir "defaults.json" (builtins.toJSON { resize = "scale"; }))
     ];
   };
@@ -99,10 +111,19 @@ in
     serviceConfig = {
       # -passwdfile reads the plaintext password from the file's first line;
       # -noipv6 keeps it off [::1]/[::] so 127.0.0.1:5900 is the only socket.
+      # -remap applies only to VNC client input: noVNC on the iPad sends Cmd
+      # (and Option) as Alt_L, so this makes Cmd act as i3's $mod (Super)
+      # remotely while the desktop's own keyboard is untouched. Option isn't
+      # usable as a modifier anyway — iPadOS composes Option+key into ∑/†/¡.
+      # -nomodtweak injects keycodes as-is instead of adjusting Shift to match
+      # the keysym: with Cmd held iOS reports the unshifted key ("p"), and
+      # modtweak would lift the held Shift to type it, breaking $mod+Shift
+      # bindings. Safe here since client and host are both US layouts.
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.x11vnc}/bin/x11vnc -display :0 -rfbport 5900"
         "-listen 127.0.0.1 -localhost -noipv6"
         "-passwdfile ${config.age.secrets.vnc-password.path}"
+        "-remap Alt_L-Super_L -nomodtweak"
         "-forever -shared"
       ];
       Restart = "on-failure";
