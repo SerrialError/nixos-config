@@ -1,0 +1,47 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build ${{ matrix.host }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [default, laptop, server]
+    steps:
+      # The system closures (NVIDIA, Steam, ...) don't fit in the runner's
+      # default free space; drop the preinstalled toolchains we don't use.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache /usr/local/share/boost /usr/local/.ghcup
+          sudo docker image prune --all --force
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+
+      # users.*.openssh.authorizedKeys.keyFiles reads the agenix-decrypted
+      # /run/agenix/ssh-auth-keys at eval time. CI can't decrypt secrets, so
+      # seed a dummy public key in its place (this is also why --impure).
+      - name: Seed dummy ssh-auth-keys
+        run: |
+          sudo mkdir -p /run/agenix
+          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHNvbWVkdW1teWtleWZvcmNpb25seQAAAAAAAAAA ci-dummy" \
+            | sudo tee /run/agenix/ssh-auth-keys >/dev/null
+          sudo chmod 0644 /run/agenix/ssh-auth-keys
+
+      - name: Build ${{ matrix.host }}
+        run: |
+          nix build --impure --no-link --print-build-logs \
+            .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
