@@ -32,8 +32,13 @@
   # connor is in the video group (profiles/desktop.nix). brightnessctl (in the
   # i3 keybindings) works via logind and doesn't need this, but polybar writes
   # sysfs directly.
+  #
+  # The second rule: the VEX V5 brain/controller (USB vendor 2888) enumerates
+  # as /dev/ttyACM*; tell ModemManager (pulled in by NetworkManager) not to
+  # probe it, so it can't hold the port open while `cargo v5 upload` runs.
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="2888", ENV{ID_MM_DEVICE_IGNORE}="1"
   '';
 
   # Ignore the built-in touchscreen (I2C HID "GTCH7503…", a G2Touch direct
@@ -93,6 +98,10 @@
   };
 
   users.users.connor.description = "connor-laptop";
+
+  # /dev/ttyACM* (the VEX V5 brain over USB) is group dialout; membership lets
+  # `cargo v5 upload` open it without root.
+  users.users.connor.extraGroups = [ "dialout" ];
 
   # Keep connor's user manager (user@1000.service) running even when nobody is
   # logged into the GUI, so the home-manager Syncthing service syncs whenever
