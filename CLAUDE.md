@@ -34,6 +34,8 @@ nix flake update nvf        # a single input (see nvf note below)
 
 There is no test suite or linter — validation is `nixos-rebuild build` succeeding for `.#default`, `.#laptop`, and `.#server`.
 
+GitHub Actions (`.github/workflows/build.yml`) builds all three `toplevel`s on every push/PR. CI can't decrypt agenix, so it seeds a dummy public key at `/run/agenix/ssh-auth-keys` before the `--impure` build — any new eval-time read of a `/run/agenix/*` file needs the same treatment there.
+
 ### Note for Claude Code
 
 `nixos-rebuild` needs `sudo` here (the `--impure` eval reads the root-only agenix keyfile), and `sudo` in this environment prompts for a password on an interactive TTY that Claude cannot answer — so **Claude cannot run `nrs`/`nrb`/`srb` or any `sudo nixos-rebuild` itself**; those will just hang or fail. Instead:
