@@ -94,7 +94,10 @@ in
   # Browser remote desktop: x11vnc shares the X server on :0 and noVNC
   # (websockify serving the web client) proxies to it. x11vnc binds 127.0.0.1
   # only; noVNC listens on all interfaces at :6080 so other LAN machines can
-  # open http://<desktop>:6080/vnc.html (VNC password still required).
+  # open http://<desktop>:6080/vnc.html.
+  # No VNC password (-nopw): remote access is gated by Cloudflare Access on
+  # the tunnel below. That also means anyone on the LAN who opens :6080 gets
+  # the desktop unauthenticated — an accepted trade-off on the home network.
   # Both are system services started at boot, not user services tied to the i3
   # session. Otherwise, after a reboot, nothing listens until someone logs in at
   # the physical screen. x11vnc runs as root so it can read SDDM's X cookie
@@ -103,11 +106,6 @@ in
   # (-noreset), so one x11vnc covers the greeter and then the i3 session.
   # Restart=always re-attaches when X restarts (logout, display-manager
   # restart).
-  age.secrets.vnc-password = {
-    file = ../../secrets/vnc-password.age;
-    owner = "connor";
-    mode = "0400";
-  };
   systemd.services.x11vnc = {
     description = "x11vnc sharing the X server on :0 (localhost only)";
     wantedBy = [ "multi-user.target" ];
@@ -116,7 +114,6 @@ in
     # start rate limit and giving up.
     startLimitIntervalSec = 0;
     path = [ pkgs.procps ];
-    # -passwdfile reads the plaintext password from the file's first line;
     # -noipv6 keeps it off [::1]/[::] so 127.0.0.1:5900 is the only socket.
     # -remap applies only to VNC client input: noVNC on the iPad sends Cmd
     # (and Option) as Alt_L, so this makes Cmd act as i3's $mod (Super)
@@ -132,7 +129,7 @@ in
       [ -n "$auth" ] || { echo "X server has no -auth file"; exit 1; }
       exec ${pkgs.x11vnc}/bin/x11vnc -display :0 -auth "$auth" -rfbport 5900 \
         -listen 127.0.0.1 -localhost -noipv6 \
-        -passwdfile ${config.age.secrets.vnc-password.path} \
+        -nopw \
         -remap Alt_L-Super_L -nomodtweak \
         -forever -shared
     '';
