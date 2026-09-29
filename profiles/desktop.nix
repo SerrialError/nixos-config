@@ -357,6 +357,15 @@ in
 
   programs.virt-manager.enable = true;
 
+  # Run generic dynamically linked Linux binaries (e.g. T3 Code's downloaded
+  # t3 runtime in ~/.t3/runtime), which expect /lib64/ld-linux-x86-64.so.2.
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    stdenv.cc.cc.lib
+    zlib
+    openssl
+  ];
+
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.login.enableGnomeKeyring = true;
