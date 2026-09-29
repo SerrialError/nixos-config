@@ -76,6 +76,11 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.networkmanager.enable = true;
+  # WiFi power save (on by default for both hosts' cards) parks incoming
+  # packets at the AP until the next beacon/DTIM wake-up, adding 10-200 ms of
+  # jitter to every SSH keystroke echo and VNC frame. Costs a little battery on
+  # the laptop; worth it for interactive remote sessions.
+  networking.networkmanager.wifi.powersave = false;
   virtualisation.docker.enable = true;
   virtualisation.docker.package = pkgs.docker_29;
   virtualisation.docker.rootless = {
