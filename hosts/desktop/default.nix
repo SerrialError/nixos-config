@@ -91,58 +91,67 @@ in
     file = ../../secrets/task-sync-secret.age;
     owner = "connor";
   };
-  # Browser remote desktop: x11vnc shares the live i3 session on :0 and noVNC
+  # Browser remote desktop: x11vnc shares the X server on :0 and noVNC
   # (websockify serving the web client) proxies to it. x11vnc binds 127.0.0.1
   # only; noVNC listens on all interfaces at :6080 so other LAN machines can
-  # open http://<desktop>:6080/vnc.html (VNC password still required). User
-  # services bound to graphical-session.target, so they start with the i3
-  # session and inherit the XAUTHORITY home-manager's xsession imports into the
-  # user manager (x11vnc runs as connor, no root/-auth guessing needed).
+  # open http://<desktop>:6080/vnc.html (VNC password still required).
+  # Both are system services started at boot, not user services tied to the i3
+  # session. Otherwise, after a reboot, nothing listens until someone logs in at
+  # the physical screen. x11vnc runs as root so it can read SDDM's X cookie
+  # (/run/sddm/xauth_*, a random name per boot, taken from the X server's
+  # -auth argument). SDDM reuses that X server for the logged-in session
+  # (-noreset), so one x11vnc covers the greeter and then the i3 session.
+  # Restart=always re-attaches when X restarts (logout, display-manager
+  # restart).
   age.secrets.vnc-password = {
     file = ../../secrets/vnc-password.age;
     owner = "connor";
     mode = "0400";
   };
-  systemd.user.services.x11vnc = {
-    description = "x11vnc sharing the live X session on :0 (localhost only)";
-    wantedBy = [ "graphical-session.target" ];
-    partOf = [ "graphical-session.target" ];
-    after = [ "graphical-session.target" ];
-    unitConfig.ConditionUser = "connor";
+  systemd.services.x11vnc = {
+    description = "x11vnc sharing the X server on :0 (localhost only)";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "display-manager.service" ];
+    # Keep retrying while the X server isn't up yet instead of hitting the
+    # start rate limit and giving up.
+    startLimitIntervalSec = 0;
+    path = [ pkgs.procps ];
+    # -passwdfile reads the plaintext password from the file's first line;
+    # -noipv6 keeps it off [::1]/[::] so 127.0.0.1:5900 is the only socket.
+    # -remap applies only to VNC client input: noVNC on the iPad sends Cmd
+    # (and Option) as Alt_L, so this makes Cmd act as i3's $mod (Super)
+    # remotely while the desktop's own keyboard is untouched. Option isn't
+    # usable as a modifier anyway — iPadOS composes Option+key into ∑/†/¡.
+    # -nomodtweak injects keycodes as-is instead of adjusting Shift to match
+    # the keysym: with Cmd held iOS reports the unshifted key ("p"), and
+    # modtweak would lift the held Shift to type it, breaking $mod+Shift
+    # bindings. Safe here since client and host are both US layouts.
+    script = ''
+      pid="$(pgrep -o -x X)" || { echo "X server not running yet"; exit 1; }
+      auth="$(tr '\0' '\n' < "/proc/$pid/cmdline" | sed -n '/^-auth$/{n;p}')"
+      [ -n "$auth" ] || { echo "X server has no -auth file"; exit 1; }
+      exec ${pkgs.x11vnc}/bin/x11vnc -display :0 -auth "$auth" -rfbport 5900 \
+        -listen 127.0.0.1 -localhost -noipv6 \
+        -passwdfile ${config.age.secrets.vnc-password.path} \
+        -remap Alt_L-Super_L -nomodtweak \
+        -forever -shared
+    '';
     serviceConfig = {
-      # -passwdfile reads the plaintext password from the file's first line;
-      # -noipv6 keeps it off [::1]/[::] so 127.0.0.1:5900 is the only socket.
-      # -remap applies only to VNC client input: noVNC on the iPad sends Cmd
-      # (and Option) as Alt_L, so this makes Cmd act as i3's $mod (Super)
-      # remotely while the desktop's own keyboard is untouched. Option isn't
-      # usable as a modifier anyway — iPadOS composes Option+key into ∑/†/¡.
-      # -nomodtweak injects keycodes as-is instead of adjusting Shift to match
-      # the keysym: with Cmd held iOS reports the unshifted key ("p"), and
-      # modtweak would lift the held Shift to type it, breaking $mod+Shift
-      # bindings. Safe here since client and host are both US layouts.
-      ExecStart = lib.concatStringsSep " " [
-        "${pkgs.x11vnc}/bin/x11vnc -display :0 -rfbport 5900"
-        "-listen 127.0.0.1 -localhost -noipv6"
-        "-passwdfile ${config.age.secrets.vnc-password.path}"
-        "-remap Alt_L-Super_L -nomodtweak"
-        "-forever -shared"
-      ];
-      Restart = "on-failure";
+      Restart = "always";
       RestartSec = 3;
     };
   };
-  systemd.user.services.novnc = {
+  systemd.services.novnc = {
     description = "noVNC web client + websockify proxy to x11vnc";
-    wantedBy = [ "graphical-session.target" ];
-    partOf = [ "graphical-session.target" ];
+    wantedBy = [ "multi-user.target" ];
     after = [
-      "graphical-session.target"
+      "network.target"
       "x11vnc.service"
     ];
-    unitConfig.ConditionUser = "connor";
     serviceConfig = {
       ExecStart = "${pkgs.python3Packages.websockify}/bin/websockify --web ${novnc-web} 0.0.0.0:6080 127.0.0.1:5900";
-      Restart = "on-failure";
+      DynamicUser = true;
+      Restart = "always";
       RestartSec = 3;
     };
   };
