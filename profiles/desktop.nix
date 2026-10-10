@@ -113,6 +113,10 @@ in
     powerOnBoot = true;
   };
 
+  # Cap the persistent journal (it had grown to 3+ GiB on the root disk).
+  # The server sets its own SystemMaxUse in hosts/server/monitoring.nix.
+  services.journald.extraConfig = "SystemMaxUse=1G";
+
   hardware.xpadneo.enable = true;
   services.blueman.enable = true;
   services.udisks2.enable = true;
