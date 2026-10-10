@@ -209,6 +209,15 @@ From the desktop checkout:
 are read from the agenix-decrypted `/run/agenix/ssh-auth-keys` at eval time —
 which is also why the aliases run under sudo.
 
+### Desktop: ~/Videos on the storage drive
+
+`hosts/desktop` bind-mounts `/mnt/storage/connor/Videos` onto `~/Videos`.
+The source dir must exist (owned by connor) before the mount activates; on a
+fresh storage drive, create it with
+`sudo install -d -o connor -g users /mnt/storage/connor/Videos`. Stop
+syncthing (`systemctl --user stop syncthing`) while moving data so it never
+sees the folder empty.
+
 ## Keybindings
 
 - `Mod4 + Return`: Open terminal (Alacritty)

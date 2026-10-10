@@ -75,6 +75,21 @@ in
       "discard"
     ];
   };
+
+  # ~/Videos lives on the 2 TB storage drive; bind-mounted back so the path
+  # is unchanged for apps, xdg userDirs and the syncthing "Videos" folder.
+  # nofail: if the drive is missing, boot continues with the empty local dir
+  # (syncthing then refuses the folder since .stfolder is absent, rather than
+  # propagating deletions). The source dir is created once by hand (README).
+  fileSystems."/home/connor/Videos" = {
+    device = "/mnt/storage/connor/Videos";
+    fsType = "none";
+    depends = [ "/mnt/storage" ];
+    options = [
+      "bind"
+      "nofail"
+    ];
+  };
   age.identityPaths = [ "/home/connor/.config/sops/age/keys.txt" ];
   # secret file itself is declared in modules/common.nix; the desktop shares
   # it with the git-shell user
