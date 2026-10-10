@@ -19,12 +19,21 @@
   ];
 
   # Weekly automatic maintenance so the store doesn't balloon:
-  #  - gc removes generations older than 30 days (keeps recent ones for rollback)
+  #  - `nh clean all` (instead of nix.gc, which it asserts against) prunes the
+  #    system profile *and* per-user profiles (~/.local/state/nix/profiles,
+  #    home-manager) plus stale direnv/devenv/`result` gcroots, then runs
+  #    `nix store gc`. Root's nix-collect-garbage never touched the user
+  #    profiles, and with each nixpkgs bump producing a fresh ~37 GiB desktop
+  #    closure, a 30-day window pinned ~90 GiB of old generations.
+  #    Keeps the 5 newest generations and anything from the last 7 days.
   #  - optimise hard-links identical store paths to reclaim space
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
+  programs.nh = {
+    enable = true;
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep 5 --keep-since 7d";
+    };
   };
   nix.optimise = {
     automatic = true;
