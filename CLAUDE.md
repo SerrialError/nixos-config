@@ -71,7 +71,7 @@ See the README "Bringing up a new host" section for the full flow. The traps tha
 
 ### Two nixpkgs channels
 
-Stable `nixos-25.11` is the default. `nixpkgs-unstable` is imported inside `hosts/desktop/default.nix` as `pkgs-unstable` (a manually-instantiated import that inherits the system's `nixpkgs.config`). Use `pkgs-unstable.<name>` to pull a single package from unstable (currently only `t3code`).
+Stable `nixos-25.11` is the default. `nixpkgs-unstable` is imported inside `hosts/desktop/default.nix` as `pkgs-unstable` (a manually-instantiated import that inherits the system's `nixpkgs.config`). Use `pkgs-unstable.<name>` to pull a single package from unstable. `t3code` is wrapped in a `let` binding in `profiles/desktop.nix` (libstdc++ on `LD_LIBRARY_PATH` for its node-pty prebuild) until nixpkgs#569702 merges.
 
 ### home-manager sharing
 

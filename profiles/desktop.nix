@@ -15,6 +15,20 @@ let
     system = pkgs.stdenv.hostPlatform.system;
     inherit (config.nixpkgs) config;
   };
+  # t3code's vendored node-pty prebuild (pty.node) needs libstdc++ but has no
+  # RPATH (the package sets dontPatchELF), so the backend crashes on start and
+  # the desktop window never appears. Wrap the launchers with the C++ runtime
+  # on LD_LIBRARY_PATH until nixpkgs#569702 (patchelf fix) lands; drop this
+  # then. Re-wrapping the symlinkJoin avoids rebuilding t3code from source.
+  t3code = pkgs-unstable.t3code.overrideAttrs (old: {
+    buildCommand = old.buildCommand + ''
+      for program in "$out/bin"/*; do
+        wrapProgram "$program" --prefix LD_LIBRARY_PATH : ${
+          pkgs-unstable.lib.makeLibraryPath [ pkgs-unstable.stdenv.cc.cc.lib ]
+        }
+      done
+    '';
+  });
   # Login theme, overridden per the sddm-astronaut NixOS docs. Background
   # points at a file the sddm-random-background service (below) refreshes
   # from ~/Pictures/wallpapers on every boot, so the login screen rotates
@@ -260,7 +274,7 @@ in
     # stable system; these CLIs/editors release very frequently. cursor-cli and
     # code-cursor aren't cached (quick binary repackage, not a compile); the rest
     # are cached in unstable.
-    pkgs-unstable.t3code
+    t3code # pkgs-unstable.t3code + libstdc++ wrapper (let-block above)
     pkgs-unstable.grok-cli
     pkgs-unstable.claude-monitor
     pkgs-unstable.cursor-cli
