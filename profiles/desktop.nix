@@ -38,6 +38,20 @@ let
       Background = "/var/lib/sddm-background/background.png";
     };
   };
+  # Claude Desktop from the claude-desktop flake input (built on its pinned
+  # unstable). The FHS variant lets MCP servers launched via npx/uvx find
+  # their runtimes; update with `nix flake update claude-desktop`. Chromium
+  # picks its secret store from XDG_CURRENT_DESKTOP, and i3's "none+i3" makes
+  # it fall back to plaintext (no saved sign-in), so point the launcher's
+  # CLAUDE_PASSWORD_STORE knob at gnome-keyring explicitly.
+  claude-desktop = pkgs.symlinkJoin {
+    name = "claude-desktop";
+    paths = [ inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.claude-desktop-fhs ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/claude-desktop --set-default CLAUDE_PASSWORD_STORE gnome-libsecret
+    '';
+  };
 in
 {
   imports = [
@@ -284,6 +298,7 @@ in
     pkgs-unstable.cursor-cli
     pkgs-unstable.opencode
     pkgs-unstable.code-cursor
+    claude-desktop # FHS variant + gnome-keyring wrapper (let-block above)
     github-desktop # git tooling (not AI); stable channel is fine
     openrocket
     chromium
