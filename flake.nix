@@ -17,6 +17,12 @@
       url = "github:NotAShelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Claude Desktop, repackaged from Anthropic's official Linux .deb (not in
+    # nixpkgs). Follows unstable, the channel upstream builds and tests against.
+    claude-desktop = {
+      url = "github:aaddrick/claude-desktop-debian";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs =
