@@ -18,6 +18,16 @@ let
     ];
     text = builtins.readFile ../scripts/polybar-updates.sh;
   };
+  # Click handler for the updates module: pull, build, diff, confirm, switch.
+  # Runs in its own terminal so sudo can prompt and the diff can be read.
+  system-update = pkgs.writeShellApplication {
+    name = "system-update";
+    runtimeInputs = with pkgs; [
+      git
+      nvd
+    ];
+    text = "host=${flakeHost}\n" + builtins.readFile ../scripts/system-update.sh;
+  };
   # Calls nvidia-smi by absolute system-profile path, so no runtimeInputs.
   polybar-gputemp = pkgs.writeShellApplication {
     name = "polybar-gputemp";
@@ -36,6 +46,8 @@ let
   # The desktop and laptop share this bar; a few modules are host-specific.
   # The laptop swaps the NVIDIA gputemp module for a battery indicator.
   isLaptop = osConfig.networking.hostName == "laptop";
+  # Flake attr for this host (the desktop's is `default`, not its hostname).
+  flakeHost = if isLaptop then "laptop" else "default";
   modulesRight =
     if isLaptop then
       "mpd updates flatpak temperature backlight pulseaudio battery date"
@@ -177,15 +189,15 @@ in
         interval = 5;
       };
 
-      # Shows yellow "Updates Available" when the nixpkgs channel is ahead of
-      # flake.lock, or green "Up to Date" when it matches. Only tracks the
-      # nixpkgs input, not the other flake inputs. Polled hourly; click to
-      # re-check.
+      # Shows yellow "Updates Available" when GitHub main pins a newer nixpkgs
+      # than the running system, or green "Up to Date" when they match. Only
+      # tracks the nixpkgs input. Polled every 30 min; click to open a
+      # terminal that pulls, builds, shows the diff and switches on confirm.
       "module/updates" = {
         type = "custom/script";
         exec = "${polybar-updates}/bin/polybar-updates";
-        interval = 3600;
-        click-left = "${polybar-updates}/bin/polybar-updates";
+        interval = 1800;
+        click-left = "${config.programs.alacritty.package}/bin/alacritty --title 'System update' -e ${system-update}/bin/system-update";
       };
 
       # Green "Flatpak OK" when every installed Flatpak is current, or yellow
