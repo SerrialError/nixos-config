@@ -25,6 +25,28 @@ in
 
   networking.hostName = "server";
 
+  # Unattended upgrades straight from GitHub main. CI bumps flake.lock
+  # (.github/workflows/update-lock.yml) and only pushes it once all three
+  # hosts build, so this tracks a tested lock. Reboots only when the kernel,
+  # modules or initrd changed, and only inside the window; otherwise it
+  # switches in place. Note this also reverts anything deployed with `srs`
+  # that isn't pushed to main.
+  system.autoUpgrade = {
+    enable = true;
+    flake = "github:SerrialError/nixos-config#server";
+    # The eval reads the agenix-decrypted ssh-auth-keys (see modules/common.nix).
+    flags = [ "--impure" ];
+    # `--upgrade` refreshes nix-channels; the flake lock is the pin here.
+    upgrade = false;
+    dates = "04:00";
+    randomizedDelaySec = "30min";
+    allowReboot = true;
+    rebootWindow = {
+      lower = "03:30";
+      upper = "05:30";
+    };
+  };
+
   # Old BIOS laptop -> GRUB on the disk MBR. Kept here (not in the
   # hardware-configuration.nix placeholder) so it survives replacing that
   # file with the generated one. Adjust the device if the install disk
