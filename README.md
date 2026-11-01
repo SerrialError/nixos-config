@@ -128,7 +128,7 @@ fourth host.
 Dress-rehearsed against a quickemu VM on the `vm-test` branch; the numbers
 below are the order that worked.
 
-1. Install NixOS on the laptop from the **25.11** minimal ISO (partition,
+1. Install NixOS on the laptop from the **26.05** minimal ISO (partition,
    `nixos-install` with a throwaway config is fine — but match the release:
    live-switching across a systemd major version wedges
    `switch-to-configuration`). Make sure `services.openssh` is enabled and
@@ -170,7 +170,7 @@ that bootstrapped it (and how to re-do them if the machine is reinstalled or the
 hardware changes) — the config is hardware-independent apart from
 `hardware-configuration.nix` and the host-key recipient in `secrets/secrets.nix`.
 
-1. Install NixOS on the laptop from the **25.11** minimal ISO. Enable
+1. Install NixOS on the laptop from the **26.05** minimal ISO. Enable
    `services.openssh` and authorize your desktop key **for root as well as
    connor** (the first deploy runs as `root@`).
 2. On the laptop: `nixos-generate-config`, then copy the resulting
@@ -208,6 +208,28 @@ From the desktop checkout:
 `--impure` (baked into the aliases) is required because authorized SSH keys
 are read from the agenix-decrypted `/run/agenix/ssh-auth-keys` at eval time —
 which is also why the aliases run under sudo.
+
+## Updates
+
+flake.lock is bumped by CI, not by hand:
+
+- `.github/workflows/update-lock.yml` updates the stable inputs (`nixpkgs`,
+  `home-manager`, `agenix`) weekly and the fast-moving ones (`nixpkgs-unstable`,
+  `nvf`, `claude-desktop`, `nix-colors`) monthly. It builds all three hosts
+  with the candidate lock (via `build.yml`) and pushes to `main` only if every
+  build passes. Run it by hand from the Actions tab (choose `stable`, `fast`
+  or `all`).
+- **Server:** `system.autoUpgrade` pulls `github:SerrialError/nixos-config#server`
+  nightly at 04:00 and switches, rebooting (03:30–05:30 only) when the kernel
+  or initrd changed. Anything deployed with `srs` but not pushed to `main` is
+  reverted by the next run, so push first.
+- **Desktop / laptop:** polybar shows *Updates Available* when `main` pins a
+  newer nixpkgs than the running system. Click it to fast-forward the
+  checkout, build, review the `nvd` diff and switch. As a fallback, a nightly
+  `nixos-rebuild boot` stages `main` for the next reboot (skipped when the
+  checkout is dirty, off `main`, or has unpushed commits; laptop only on AC).
+- **Release upgrades** (e.g. 26.05 → 26.11) stay manual: bump the `nixpkgs` and
+  `home-manager` URLs on a branch and let CI build it.
 
 ### Desktop: ~/Videos on the storage drive
 

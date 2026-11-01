@@ -25,10 +25,12 @@ sudo nixos-rebuild build --flake /home/connor/git/nixos-config#laptop --impure
 # Server: build locally (alias `srb`) / deploy over SSH (alias `srs`)
 sudo nixos-rebuild build --flake /home/connor/git/nixos-config#server --impure
 
-# Update inputs
+# Update inputs by hand (normally CI does this, see below)
 nix flake update            # all inputs
 nix flake update nvf        # a single input (see nvf note below)
 ```
+
+flake.lock is normally bumped by `.github/workflows/update-lock.yml` (stable inputs weekly, fast-moving ones monthly), which builds all three hosts with the candidate lock via `build.yml` (`workflow_call`) and pushes to `main` only if they pass. The server `system.autoUpgrade`s from `github:SerrialError/nixos-config#server` nightly (switch; reboot only for kernel/initrd changes, 03:30–05:30). Desktop and laptop: the polybar updates module (`scripts/polybar-updates.sh`) compares the running nixpkgs rev with `main`'s lock, and clicking it runs `scripts/system-update.sh` (fast-forward, build, `nvd` diff, confirm, switch); a nightly `system.autoUpgrade` with `operation = "boot"` in `profiles/desktop.nix` fast-forwards the checkout and stages `main` for the next boot, skipping via `ExecCondition` if the checkout is dirty, off `main`, or ahead of it. Consequence: a local `nix flake update` leaves the checkout dirty and pauses the fallback until it is committed and pushed (or discarded); a server deploy via `srs` that isn't on `main` is reverted overnight.
 
 `--impure` is **required** for both hosts: `users.users.*.openssh.authorizedKeys.keyFiles` reads the agenix-decrypted `/run/agenix/ssh-auth-keys` at evaluation time (root-only, hence sudo). Rebuilds fail without it, and `nix flake check` cannot work (pure eval).
 
@@ -71,7 +73,7 @@ See the README "Bringing up a new host" section for the full flow. The traps tha
 
 ### Two nixpkgs channels
 
-Stable `nixos-25.11` is the default. `nixpkgs-unstable` is imported inside `hosts/desktop/default.nix` as `pkgs-unstable` (a manually-instantiated import that inherits the system's `nixpkgs.config`). Use `pkgs-unstable.<name>` to pull a single package from unstable. `t3code` is wrapped in a `let` binding in `profiles/desktop.nix` (libstdc++ on `LD_LIBRARY_PATH` for its node-pty prebuild) until nixpkgs#569702 merges.
+Stable `nixos-26.05` is the default. `nixpkgs-unstable` is imported inside `hosts/desktop/default.nix` as `pkgs-unstable` (a manually-instantiated import that inherits the system's `nixpkgs.config`). Use `pkgs-unstable.<name>` to pull a single package from unstable. `t3code` is wrapped in a `let` binding in `profiles/desktop.nix` (libstdc++ on `LD_LIBRARY_PATH` for its node-pty prebuild) until nixpkgs#569702 merges.
 
 ### home-manager sharing
 
