@@ -1,0 +1,114 @@
+# Scheduled flake.lock bumps. The candidate lock is built for every host by
+# build.yml and only pushed to main if all of them succeed; a failed run
+# leaves main untouched (GitHub emails the failure). The hosts then pick the
+# new lock up from main: the server automatically, the desktop and laptop via
+# the polybar updates button or the nightly `boot` fallback.
+#
+# Pushes made with GITHUB_TOKEN don't trigger build.yml again, which is fine:
+# the exact lock being pushed was just built.
+name: update flake.lock
+
+on:
+  schedule:
+    # Weekly (Mon ~02:00 Pacific): the stable channel, where security fixes
+    # are backported.
+    - cron: "0 9 * * 1"
+    # Monthly (1st): inputs that track upstream heads and break more often.
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+    inputs:
+      set:
+        description: Which inputs to update
+        type: choice
+        options: [stable, fast, all]
+        default: stable
+
+permissions:
+  contents: write
+
+# Distinct from build.yml's group, so the called workflow can't deadlock on it.
+concurrency:
+  group: update-flake-lock
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+      set: ${{ steps.pick.outputs.set }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Pick inputs
+        id: pick
+        run: |
+          if [ "${{ github.event_name }}" = workflow_dispatch ]; then
+            set="${{ inputs.set }}"
+          elif [ "${{ github.event.schedule }}" = "0 9 1 * *" ]; then
+            set=fast
+          else
+            set=stable
+          fi
+          case "$set" in
+            stable) inputs="nixpkgs home-manager agenix" ;;
+            fast) inputs="nixpkgs-unstable nvf claude-desktop nix-colors" ;;
+            all) inputs="" ;; # no args = every input
+          esac
+          echo "set=$set" >> "$GITHUB_OUTPUT"
+          echo "inputs=$inputs" >> "$GITHUB_OUTPUT"
+
+      - name: Update flake.lock
+        id: update
+        run: |
+          # shellcheck disable=SC2086 # word-split the input list on purpose
+          nix flake update ${{ steps.pick.outputs.inputs }} 2>&1 | tee update.log
+          if git diff --quiet flake.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: steps.update.outputs.changed == 'true'
+        with:
+          name: flake-lock
+          path: |
+            flake.lock
+            update.log
+
+  build:
+    needs: update
+    if: needs.update.outputs.changed == 'true'
+    uses: ./.github/workflows/build.yml
+    with:
+      lock-artifact: flake-lock
+
+  push:
+    needs: [update, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: flake-lock
+          path: ${{ runner.temp }}/lock
+
+      - name: Commit and push
+        run: |
+          cp "$RUNNER_TEMP/lock/flake.lock" flake.lock
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          {
+            echo "flake.lock: update ${{ needs.update.outputs.set }} inputs"
+            echo
+            grep -E "Updated input|→" "$RUNNER_TEMP/lock/update.log" | sed 's/^/  /' || true
+          } > msg.txt
+          git commit flake.lock -F msg.txt
+          # main may have moved while the builds ran; a conflicting flake.lock
+          # change fails here and the next scheduled run tries again.
+          git pull --rebase origin main
+          git push origin HEAD:main

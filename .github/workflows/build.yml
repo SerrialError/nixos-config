@@ -4,9 +4,17 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  # Called by update-lock.yml to test a candidate flake.lock before it is
+  # pushed to main.
+  workflow_call:
+    inputs:
+      lock-artifact:
+        description: Name of an uploaded artifact holding the flake.lock to build with
+        type: string
+        default: ""
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-build
   cancel-in-progress: true
 
 jobs:
@@ -28,6 +36,13 @@ jobs:
           df -h /
 
       - uses: actions/checkout@v5
+
+      - name: Use candidate flake.lock
+        if: inputs.lock-artifact != ''
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ inputs.lock-artifact }}
+          path: .
 
       - uses: cachix/install-nix-action@v31
 
