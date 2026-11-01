@@ -60,29 +60,38 @@ in
   # jumpsquad.org sits behind Cloudflare (proxied / orange-cloud), so the home
   # IP never appears in public DNS. Certs are issued over the ACME DNS-01
   # challenge via the Cloudflare API instead of HTTP-01 — that means cert
-  # issuance needs no inbound ports, only outbound API access. The stock caddy
-  # binary can't do DNS-01, so we build it with the caddy-dns/cloudflare plugin.
+  # issuance needs no inbound ports, only outbound API access.
+  #
+  # The NixOS ACME module (lego, which speaks Cloudflare DNS natively) issues
+  # and renews the cert, and stock caddy just serves it. This replaced a caddy
+  # built with the caddy-dns/cloudflare plugin, whose fixed-output hash broke
+  # on nixpkgs bumps. With useACMEHost, the caddy module puts the cert in the
+  # caddy group, orders caddy after acme-<host>.service and reloads it on
+  # renewal.
   ############################################################################
   services.caddy = {
     enable = true;
-    package = pkgs.caddy.withPlugins {
-      plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-      hash = "sha256-tubXIDCJnO2mvdnPlZclwDhNGaeeYLSt7lnni3+pXDo=";
-    };
-    # All sites use DNS-01 via Cloudflare. The token comes from the agenix
-    # secret wired into caddy's EnvironmentFile below.
-    globalConfig = ''
-      acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-    '';
     # Only Vaultwarden is served; no static site is hosted on this machine.
-    virtualHosts."vault.jumpsquad.org".extraConfig = ''
-      reverse_proxy 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
-    '';
+    virtualHosts."vault.jumpsquad.org" = {
+      useACMEHost = "vault.jumpsquad.org";
+      extraConfig = ''
+        reverse_proxy 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
+      '';
+    };
+  };
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "contact@jumpsquad.org";
+    certs."vault.jumpsquad.org" = {
+      dnsProvider = "cloudflare";
+      environmentFile = config.age.secrets.cloudflare-api-token.path;
+      # Check propagation against public DNS, not the local Blocky resolver.
+      dnsResolver = "1.1.1.1:53";
+    };
   };
   # Cloudflare API token (Zone:DNS:Edit + Zone:Read on jumpsquad.org), read by
-  # caddy as CLOUDFLARE_API_TOKEN for the DNS-01 challenge.
+  # lego as CLOUDFLARE_DNS_API_TOKEN for the DNS-01 challenge.
   age.secrets.cloudflare-api-token.file = ../../secrets/cloudflare-api-token.age;
-  systemd.services.caddy.serviceConfig.EnvironmentFile = config.age.secrets.cloudflare-api-token.path;
 
   ############################################################################
   # Vaultwarden — localhost only; reached exclusively through Caddy.
