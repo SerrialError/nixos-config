@@ -429,6 +429,8 @@ in
       recolor = "true";
       recolor-lightcolor = "#000000"; # Page background
       recolor-darkcolor = "#c5c8c6"; # Text color
+      recolor-reverse-video = "true"; # Keep images in their original colors
+      recolor-keephue = "true"; # Keep the hue of colored text/diagrams
 
       # General
       default-bg = "#1d1f21";
