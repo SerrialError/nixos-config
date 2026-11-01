@@ -131,6 +131,56 @@ in
   # The server sets its own SystemMaxUse in hosts/server/monitoring.nix.
   services.journald.extraConfig = "SystemMaxUse=1G";
 
+  # Nightly fallback upgrade. flake.lock is bumped by CI (.github/workflows/
+  # update-lock.yml) and only lands on main once all three hosts build, so
+  # this fast-forwards the local checkout to origin/main and stages the result
+  # with `boot`: it takes effect at the next reboot and never changes the
+  # running session. The polybar "updates" button applies it immediately.
+  # Skips (without failing) when the checkout has local edits, isn't on main,
+  # or has unpushed commits, so it can't stage a half-finished config.
+  system.autoUpgrade = {
+    enable = true;
+    operation = "boot";
+    flake = "/home/connor/git/nixos-config#${
+      if config.networking.hostName == "nixos" then "default" else config.networking.hostName
+    }";
+    # The eval reads the agenix-decrypted ssh-auth-keys (see modules/common.nix).
+    flags = [ "--impure" ];
+    # `--upgrade` refreshes nix-channels; the flake lock is the pin here.
+    upgrade = false;
+    dates = "04:00";
+    randomizedDelaySec = "30min";
+  };
+  systemd.services.nixos-upgrade = {
+    # Runs at boot when the 04:00 slot was missed (Persistent=), so keep it
+    # out of the way of whatever the machine is doing.
+    serviceConfig = {
+      Nice = 19;
+      IOSchedulingClass = "idle";
+      CPUSchedulingPolicy = "idle";
+      ExecCondition =
+        let
+          check = pkgs.writeShellScript "nixos-upgrade-check" ''
+            set -u
+            repo=/home/connor/git/nixos-config
+            git() { ${pkgs.util-linux}/bin/runuser -u connor -- ${pkgs.git}/bin/git -C "$repo" "$@"; }
+            # Exit 1 = skip this run (ExecCondition), not a unit failure.
+            [ "$(git symbolic-ref --short HEAD)" = main ] || { echo "checkout not on main; skipping"; exit 1; }
+            [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "uncommitted changes; skipping"; exit 1; }
+            # https, so the root-run unit needs no SSH key (the repo is public).
+            git fetch --quiet https://github.com/SerrialError/nixos-config.git +main:refs/remotes/origin/main \
+              || { echo "fetch failed; skipping"; exit 1; }
+            git merge-base --is-ancestor HEAD origin/main || { echo "unpushed commits; skipping"; exit 1; }
+          '';
+        in
+        "${check}";
+    };
+    preStart = ''
+      ${pkgs.util-linux}/bin/runuser -u connor -- \
+        ${pkgs.git}/bin/git -C /home/connor/git/nixos-config merge --ff-only --quiet origin/main
+    '';
+  };
+
   hardware.xpadneo.enable = true;
   services.blueman.enable = true;
   services.udisks2.enable = true;

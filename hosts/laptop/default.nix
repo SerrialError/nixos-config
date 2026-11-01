@@ -23,6 +23,10 @@
   # this to the NVIDIA module; here we enable it directly.
   hardware.graphics.enable = true;
 
+  # Don't spend battery on the nightly fallback upgrade (profiles/desktop.nix);
+  # the polybar updates button still works on battery.
+  systemd.services.nixos-upgrade.unitConfig.ConditionACPower = true;
+
   # Touchpad support (harmless in the VM; real hardware on the laptop).
   services.libinput.enable = true;
 
