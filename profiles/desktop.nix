@@ -59,6 +59,19 @@ let
       };
     }
   );
+  # OpenAsar for Discord, patched so H.264 videos play. Discord decodes
+  # H.264 with an OpenH264 library it downloads into
+  # ~/.config/discord/discord_asset_cache/openh264/, and OpenAsar passes that
+  # file to Chromium via --openh264-library-path. Upstream (still on main as
+  # of 2026-11-07) hardcodes libopenh264-2.5.1-linux64.7.so, but Discord now
+  # downloads 2.7.0, so the path doesn't exist and every H.264 video fails
+  # ("DECODER_ERROR_NOT_SUPPORTED ... kUnsupportedConfig"); VP9/AV1 still
+  # play. The patch uses whichever libopenh264-*.so is actually there.
+  openasar = pkgs.openasar.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace src/cmdSwitches.js --replace-fail ${lib.escapeShellArg "join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.5.1-linux64.7.so')"} ${lib.escapeShellArg "(() => { const d = join(paths.getAssetCachePath(), 'openh264'); let f; try { f = require('fs').readdirSync(d).filter((x) => /^libopenh264-.*\\.so$/.test(x)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).pop(); } catch {} return join(d, f || 'libopenh264-2.5.1-linux64.7.so'); })()"}
+    '';
+  });
   # Always-on T3 Code server (home-manager user unit, desktop only), so phones
   # and other machines can reach it whether or not the desktop app is open.
   # Only one server may own ~/.t3, so this replaces the desktop app's own
@@ -469,7 +482,7 @@ in
     (pkgs.discord.override {
       withOpenASAR = true;
       withVencord = true;
-      inherit vencord;
+      inherit vencord openasar;
     })
     mangohud
     xclip # Add xclip for clipboard support
