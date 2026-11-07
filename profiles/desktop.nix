@@ -29,6 +29,34 @@ let
       done
     '';
   });
+  # Vencord 1.15.16 for Discord. Discord moved its web client to rspack on
+  # 2026-11-04 and older Vencord (nixpkgs 26.05 and unstable ship 1.15.13)
+  # breaks it: the window stays blank ("Uncaught TypeError: i.A is not a
+  # constructor"). Mirrors nixpkgs master (19375cd, c4d1afc), which also drops
+  # the stray fix-deps.patch; the pnpm deps hash differs from master's because
+  # 26.05's pnpm differs. Drop this once 26.05 ships vencord >= 1.15.16.
+  vencord = pkgs.vencord.overrideAttrs (
+    finalAttrs: old: {
+      version = "1.15.16";
+      src = pkgs.fetchFromGitHub {
+        owner = "Vendicated";
+        repo = "Vencord";
+        tag = "v${finalAttrs.version}";
+        hash = "sha256-aUJubLJpyLAZWiOezqFxPY6oVPgWVPQpajFqrJvrO9U=";
+      };
+      patches = [ ];
+      postPatch = "";
+      env = old.env // {
+        VENCORD_HASH = finalAttrs.version;
+      };
+      pnpmDeps = pkgs.fetchPnpmDeps {
+        inherit (finalAttrs) pname src;
+        pnpm = pkgs.pnpm_11;
+        fetcherVersion = 4;
+        hash = "sha256-1HcQH0ZZixQvziehIDhyBUB8v5ckufxrS2yUq2BcMVQ=";
+      };
+    }
+  );
   # Login theme, overridden per the sddm-astronaut NixOS docs. Background
   # points at a file the sddm-random-background service (below) refreshes
   # from ~/Pictures/wallpapers on every boot, so the login screen rotates
@@ -382,10 +410,16 @@ in
     age
     ssh-to-age
     bitwarden-desktop
+    # Hardware acceleration is OFF (Discord Settings -> Advanced, stored as
+    # enableHardwareAcceleration in ~/.config/discord/settings.json, not here):
+    # on the NVIDIA 580 driver Discord's GPU process loses its EGL context
+    # (EGL_CONTEXT_LOST in the journal) and Chromium falls back to software
+    # anyway. It still renders with it on; retry after a Discord/driver bump.
+    # (The blank window of 2026-11 was Vencord, not this; see `vencord` above.)
     (pkgs.discord.override {
-      # remove any overrides that you don't want
       withOpenASAR = true;
       withVencord = true;
+      inherit vencord;
     })
     mangohud
     xclip # Add xclip for clipboard support
