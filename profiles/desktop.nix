@@ -63,10 +63,12 @@ let
   # and other machines can reach it whether or not the desktop app is open.
   # Only one server may own ~/.t3, so this replaces the desktop app's own
   # backend: in the app, turn Settings -> "Local environment" OFF
-  # (localEnvironmentEnabled = false in ~/.t3/userdata/desktop-settings.json)
-  # and add this server as an environment from a `t3 pair` link. Never run
-  # both against ~/.t3: the app's backend (desktop mode) doesn't check for an
-  # existing owner.
+  # (localEnvironmentEnabled = false in ~/.t3/userdata/desktop-settings.json);
+  # with it on, the app refuses to start ("This T3 home is unavailable").
+  # Pair the app by passing it the "App link" from `t3 pair`:
+  #   t3code-desktop "$(t3 pair | sed -n 's/^App link: //p')"
+  # (Clicking t3code:// links doesn't work: the app registers bare electron,
+  # without its app path, as the scheme handler.)
   #
   # Upstream's `t3 service install` writes a near-identical unit but runs a
   # self-downloaded, self-updating runtime from ~/.t3/runtime; this runs the
