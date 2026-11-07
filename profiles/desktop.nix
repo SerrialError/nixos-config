@@ -5,12 +5,14 @@
 # agenix identity) stay in each host's default.nix.
 {
   config,
+  lib,
   pkgs,
   inputs,
   ...
 }:
 
 let
+  isDesktop = config.networking.hostName == "nixos";
   pkgs-unstable = import inputs.nixpkgs-unstable {
     system = pkgs.stdenv.hostPlatform.system;
     inherit (config.nixpkgs) config;
@@ -57,6 +59,45 @@ let
       };
     }
   );
+  # Always-on T3 Code server (home-manager user unit, desktop only), so phones
+  # and other machines can reach it whether or not the desktop app is open.
+  # Only one server may own ~/.t3, so this replaces the desktop app's own
+  # backend: in the app, turn Settings -> "Local environment" OFF
+  # (localEnvironmentEnabled = false in ~/.t3/userdata/desktop-settings.json)
+  # and add this server as an environment from a `t3 pair` link. Never run
+  # both against ~/.t3: the app's backend (desktop mode) doesn't check for an
+  # existing owner.
+  #
+  # Upstream's `t3 service install` writes a near-identical unit but runs a
+  # self-downloaded, self-updating runtime from ~/.t3/runtime; this runs the
+  # Nix-managed t3code instead (upstream: "use Nix to update" Nix installs).
+  # `t3 start` (unlike `t3 serve`) refuses to start while another server owns
+  # the directory, so during the switch-over this just retries until the
+  # app's backend is gone. Same address as the app's network-accessible mode
+  # (0.0.0.0:3773; the firewall is off here), so paired devices keep working.
+  t3codeService = {
+    Unit = {
+      Description = "T3 Code server (always on, for remote clients)";
+      # Keep retrying while the desktop app's backend still owns ~/.t3.
+      StartLimitIntervalSec = 0;
+    };
+    Service = {
+      WorkingDirectory = "%h";
+      # User units get a minimal PATH; agents need claude, nix, sudo wrappers,
+      # etc. (git/gh/codex/rg come from the t3code wrapper itself).
+      Environment = [
+        "PATH=/run/wrappers/bin:%h/.nix-profile/bin:/etc/profiles/per-user/connor/bin:/run/current-system/sw/bin"
+      ];
+      ExecStart = "${t3code}/bin/t3 start --mode web --no-browser --host 0.0.0.0 --port 3773 --base-dir %h/.t3";
+      Restart = "always";
+      RestartSec = 15;
+      # As upstream's unit: stop the server first and let it shut its agent
+      # children down; one OOM-killed agent must not take the server with it.
+      KillMode = "mixed";
+      OOMPolicy = "continue";
+    };
+    Install.WantedBy = [ "default.target" ];
+  };
   # Login theme, overridden per the sddm-astronaut NixOS docs. Background
   # points at a file the sddm-random-background service (below) refreshes
   # from ~/Pictures/wallpapers on every boot, so the login screen rotates
@@ -323,10 +364,18 @@ in
     useUserPackages = true; # install HM packages via /etc/profiles (standard on NixOS)
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "connor" = import ../home.nix;
+      "connor" = {
+        imports = [ ../home.nix ];
+        # Always-on T3 Code server; see the comment on t3codeService above.
+        systemd.user.services.t3code = lib.mkIf isDesktop t3codeService;
+      };
     };
     backupFileExtension = "backup";
   };
+
+  # Desktop: start connor's user manager at boot, before anyone logs in, so
+  # the always-on T3 Code server (t3codeService above) is reachable then too.
+  users.users.connor.linger = lib.mkIf isDesktop true;
 
   fonts.packages = with pkgs; [
     nerd-fonts.fira-code
