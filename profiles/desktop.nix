@@ -459,12 +459,11 @@ in
     age
     ssh-to-age
     bitwarden-desktop
-    # Hardware acceleration is OFF (Discord Settings -> Advanced, stored as
-    # enableHardwareAcceleration in ~/.config/discord/settings.json, not here):
-    # on the NVIDIA 580 driver Discord's GPU process loses its EGL context
-    # (EGL_CONTEXT_LOST in the journal) and Chromium falls back to software
-    # anyway. It still renders with it on; retry after a Discord/driver bump.
-    # (The blank window of 2026-11 was Vencord, not this; see `vencord` above.)
+    # Hardware acceleration is on (Discord Settings -> Advanced; stored in
+    # ~/.config/discord/settings.json, not here). On the NVIDIA 580 driver its
+    # GPU process logs EGL_CONTEXT_LOST and Chromium falls back to software
+    # rendering; that's harmless noise and does NOT blank the window. (The
+    # blank window of 2026-11 was Vencord; see `vencord` above.)
     (pkgs.discord.override {
       withOpenASAR = true;
       withVencord = true;
