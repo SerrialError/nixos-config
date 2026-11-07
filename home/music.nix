@@ -92,7 +92,20 @@ in
   # client (inline album art) that coexists with ncmpcpp on the same daemon.
   # ffmpeg/yt-dlp back the staging workflow: yt-dlp grabs audio-only from a
   # URL, ffmpeg extracts/repackages audio, then `beet import` files it away.
+  #
+  # make-audiobook narrates an EPUB with audiblez (Kokoro TTS, installed into
+  # a uv tool venv on first run) and files per-chapter MP3s under
+  # ~/Music/Audiobooks, deliberately bypassing beets.
   home.packages = [
+    (pkgs.writeShellApplication {
+      name = "make-audiobook";
+      runtimeInputs = with pkgs; [
+        uv
+        ffmpeg
+        coreutils
+      ];
+      text = builtins.readFile ../scripts/make-audiobook.sh;
+    })
     pkgs.playerctl
     pkgs.rmpc
     pkgs.ffmpeg
