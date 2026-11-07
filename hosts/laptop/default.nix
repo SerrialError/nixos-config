@@ -23,6 +23,16 @@
   # this to the NVIDIA module; here we enable it directly.
   hardware.graphics.enable = true;
 
+  # Bluetooth is laptop-only; the desktop doesn't enable it. home/i3.nix
+  # starts blueman-applet only where this is on.
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+  services.blueman.enable = true;
+  # Xbox wireless controllers over Bluetooth (also forces bluetooth on).
+  hardware.xpadneo.enable = true;
+
   # Don't spend battery on the nightly fallback upgrade (profiles/desktop.nix);
   # the polybar updates button still works on battery.
   systemd.services.nixos-upgrade.unitConfig.ConditionACPower = true;

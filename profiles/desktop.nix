@@ -121,11 +121,8 @@ in
   virtualisation.libvirtd.enable = true;
   users.extraGroups.docker.members = [ "connor" ];
 
-  # Enable Bluetooth
-  hardware.bluetooth = {
-    enable = true;
-    powerOnBoot = true;
-  };
+  # Bluetooth (and xpadneo, which forces it on) is laptop-only
+  # (hosts/laptop/default.nix).
 
   # Cap the persistent journal (it had grown to 3+ GiB on the root disk).
   # The server sets its own SystemMaxUse in hosts/server/monitoring.nix.
@@ -181,8 +178,6 @@ in
     '';
   };
 
-  hardware.xpadneo.enable = true;
-  services.blueman.enable = true;
   services.udisks2.enable = true;
   security.polkit.enable = true;
   security.polkit.adminIdentities = [
@@ -368,7 +363,6 @@ in
     nicotine-plus
     networkmanagerapplet
     proton-vpn # official Proton VPN GTK app; drives NetworkManager, session in gnome-keyring
-    blueman
     nlohmann_json
     glibc
     flameshot

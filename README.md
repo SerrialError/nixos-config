@@ -25,7 +25,7 @@ This repository contains my personal NixOS configurations:
 - Various development tools and applications
 - Automatic startup of system tray applications:
   - Network Manager (nm-applet)
-  - Bluetooth Manager (blueman-applet)
+  - Bluetooth Manager (blueman-applet, laptop only)
   - Screenshot Tool (flameshot)
 
 ## Prerequisites

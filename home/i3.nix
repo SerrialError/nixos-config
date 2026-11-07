@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   pkgs,
   lib,
   ...
@@ -77,9 +78,10 @@ in
       # so it must NOT be launched here as well.
       startup = [
         { command = "nm-applet"; }
-        { command = "sleep 2 && blueman-applet"; }
         { command = "flameshot"; }
-      ];
+      ]
+      # blueman only exists where Bluetooth is enabled (the laptop).
+      ++ lib.optional osConfig.hardware.bluetooth.enable { command = "sleep 2 && blueman-applet"; };
 
       colors = {
         focused = {
