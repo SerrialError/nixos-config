@@ -288,8 +288,11 @@ in
       # music: import staged downloads (~/staging) into the ~/Music library.
       #   bi — loose singles/tracks, fully automatic (fingerprint + as-is fallback)
       #   ba — albums (one folder per album), interactive so you can confirm matches
-      bi = "beet import -q -s ~/staging";
-      ba = "beet import ~/staging";
+      # bi then gives each new single its own album (album = title, so
+      # Navidrome/rmpc don't show "Unknown Album"); both then regenerate the
+      # themed playlists (music-playlists).
+      bi = "beet import -q -s ~/staging && beet modify -y 'album::^$' 'album=$title' 'albumartist=$artist' && music-playlists";
+      ba = "beet import ~/staging && music-playlists";
     };
     # agenix personal password notes (see age.secrets.passwords)
     #   pw  — view deployed secret at /run/agenix/passwords

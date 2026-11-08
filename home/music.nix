@@ -96,7 +96,19 @@ in
   # make-audiobook narrates an EPUB with audiblez (Kokoro TTS, installed into
   # a uv tool venv on first run) and files per-chapter MP3s under
   # ~/Music/Audiobooks, deliberately bypassing beets.
+  #
+  # music-playlists sorts the beets library into themed .m3u playlists
+  # (Drive, Slowed + Reverb, Phonk, ...) in ~/Music/Playlists (Syncthing ->
+  # Navidrome) and mpd's playlist dir. The `bi` / `ba` aliases rerun it after
+  # every import; the classification rules live in the script.
   home.packages = [
+    (pkgs.writeShellApplication {
+      name = "music-playlists";
+      runtimeInputs = [ pkgs.python3 ];
+      # Run from the live checkout (like the other scripts/) so rule edits
+      # apply without a rebuild.
+      text = ''exec python3 -I "$HOME/git/nixos-config/scripts/music-playlists.py" "$@"'';
+    })
     (pkgs.writeShellApplication {
       name = "make-audiobook";
       runtimeInputs = with pkgs; [
