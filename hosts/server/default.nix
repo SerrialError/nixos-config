@@ -144,6 +144,8 @@ in
   ############################################################################
   systemd.tmpfiles.rules = [
     "d /var/lib/music 0755 syncthing syncthing -"
+    # Same arrangement for the audiobook folder (served by Audiobookshelf).
+    "d /var/lib/audiobooks 0755 syncthing syncthing -"
   ];
 
   services.syncthing = {
@@ -158,6 +160,13 @@ in
       folders.Music = {
         # Folder ID must match the desktop's ("Music"); path is local.
         path = "/var/lib/music";
+        devices = [ "desktop" ];
+        type = "receiveonly";
+      };
+      # Audiobooks are kept out of ~/Music (so Navidrome / mpd never mix
+      # chapters into music) and arrive as their own folder.
+      folders.Audiobooks = {
+        path = "/var/lib/audiobooks";
         devices = [ "desktop" ];
         type = "receiveonly";
       };
@@ -183,6 +192,23 @@ in
       Port = 4533;
       MusicFolder = "/var/lib/music";
     };
+  };
+
+  ############################################################################
+  # Audiobookshelf — audiobook server (resume position, chapters, sleep timer,
+  # phone apps), LAN-only like Navidrome. Books are made on the desktop by
+  # make-audiobook into ~/Audiobooks and arrive here over Syncthing.
+  #
+  # Libraries live in its database, not in Nix: on first visit
+  # (http://audiobooks.home:13378) create the admin user, then add a "Books"
+  # library with folder /var/lib/audiobooks. It only needs read access, which
+  # the 0755 tree above gives it.
+  ############################################################################
+  services.audiobookshelf = {
+    enable = true;
+    host = "0.0.0.0";
+    port = 13378;
+    openFirewall = true;
   };
 
   ############################################################################
@@ -276,10 +302,13 @@ in
       ];
       # Needed to resolve the DoT upstream's hostname at startup.
       bootstrapDns = "tcp+udp:9.9.9.9";
-      # Split-horizon record: resolve the Immich hostname to this box's LAN IP
+      # Split-horizon records: resolve the Immich / Audiobookshelf hostnames to this box's LAN IP
       # for in-house devices. The .245 address is DHCP-assigned today — keep a
       # router DHCP reservation for it so this mapping stays correct.
-      customDNS.mapping."immich.home" = "192.168.1.245";
+      customDNS.mapping = {
+        "immich.home" = "192.168.1.245";
+        "audiobooks.home" = "192.168.1.245";
+      };
       blocking = {
         denylists.ads = [
           "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"

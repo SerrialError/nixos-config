@@ -1,13 +1,15 @@
 # make-audiobook BOOK.epub [VOICE]
 #
 # Narrates an EPUB with audiblez (Kokoro TTS) on the GPU and files it as
-# per-chapter MP3s under ~/Music/Audiobooks/<Author>/<Title>/, which Syncthing
-# carries to the server's Navidrome. Bypasses beets on purpose: MusicBrainz /
-# AcoustID / lastgenre have nothing useful to say about a TTS narration.
+# per-chapter MP3s under ~/Audiobooks/<Author>/<Title>/, which Syncthing
+# carries to the server's Audiobookshelf. Deliberately outside ~/Music, so
+# mpd / Navidrome never mix chapters into music. Bypasses beets on purpose:
+# MusicBrainz / AcoustID / lastgenre have nothing useful to say about a TTS
+# narration.
 #
-# MP3 rather than M4B: Navidrome ignores M4B chapter markers (a whole book
-# would be one 10-hour track), while one MP3 per chapter gives chapter
-# navigation and resumable tracks in every Subsonic client.
+# One MP3 per chapter: Audiobookshelf treats the <Title> folder as one book
+# and its files as chapters (ordered by the track-number prefix), and any
+# plain player can still navigate them.
 #
 # Rendering is resumable: chapter WAVs are cached in ~/.cache/audiobooks and
 # audiblez skips chapters that already exist, so re-running after an
@@ -96,7 +98,7 @@ EOF
 
 IFS=$'\t' read -r author title <<<"$(head -1 <<<"$manifest")"
 safe() { tr '/:' '--' <<<"$1"; }
-dest="$HOME/Music/Audiobooks/$(safe "$author")/$(safe "$title")"
+dest="$HOME/Audiobooks/$(safe "$author")/$(safe "$title")"
 mkdir -p "$dest"
 
 cover="$render/cover.jpg"

@@ -840,6 +840,14 @@ in
             devices = [ peer ] ++ lib.optional (!isLaptop) "server";
           }
           // lib.optionalAttrs isLaptop { type = "receiveonly"; };
+          # Audiobooks (from make-audiobook) sync like Music but as their own
+          # folder, so mpd / Navidrome never treat chapters as songs; the
+          # server serves them with Audiobookshelf.
+          "Audiobooks" = {
+            path = "${config.home.homeDirectory}/Audiobooks";
+            devices = [ peer ] ++ lib.optional (!isLaptop) "server";
+          }
+          // lib.optionalAttrs isLaptop { type = "receiveonly"; };
         };
       };
   };
