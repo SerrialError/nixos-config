@@ -543,6 +543,28 @@ in
     stdenv.cc.cc.lib
     zlib
     openssl
+    # T3's browser (preview_* tools) is a downloaded chrome-headless-shell in
+    # ~/.t3/tools/; these are its shared-library deps (upstream's
+    # `t3 browser setup` would apt-install them, which NixOS can't use).
+    glib
+    nspr
+    nss
+    atk
+    at-spi2-atk
+    at-spi2-core
+    dbus
+    libx11
+    libxcomposite
+    libxdamage
+    libxext
+    libxfixes
+    libxrandr
+    libxcb
+    libgbm
+    expat
+    libxkbcommon
+    systemd # libudev
+    alsa-lib
   ];
 
   # List services that you want to enable:
