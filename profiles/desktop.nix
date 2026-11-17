@@ -31,34 +31,6 @@ let
       done
     '';
   });
-  # Vencord 1.15.16 for Discord. Discord moved its web client to rspack on
-  # 2026-11-04 and older Vencord (nixpkgs 26.05 and unstable ship 1.15.13)
-  # breaks it: the window stays blank ("Uncaught TypeError: i.A is not a
-  # constructor"). Mirrors nixpkgs master (19375cd, c4d1afc), which also drops
-  # the stray fix-deps.patch; the pnpm deps hash differs from master's because
-  # 26.05's pnpm differs. Drop this once 26.05 ships vencord >= 1.15.16.
-  vencord = pkgs.vencord.overrideAttrs (
-    finalAttrs: old: {
-      version = "1.15.16";
-      src = pkgs.fetchFromGitHub {
-        owner = "Vendicated";
-        repo = "Vencord";
-        tag = "v${finalAttrs.version}";
-        hash = "sha256-aUJubLJpyLAZWiOezqFxPY6oVPgWVPQpajFqrJvrO9U=";
-      };
-      patches = [ ];
-      postPatch = "";
-      env = old.env // {
-        VENCORD_HASH = finalAttrs.version;
-      };
-      pnpmDeps = pkgs.fetchPnpmDeps {
-        inherit (finalAttrs) pname src;
-        pnpm = pkgs.pnpm_11;
-        fetcherVersion = 4;
-        hash = "sha256-1HcQH0ZZixQvziehIDhyBUB8v5ckufxrS2yUq2BcMVQ=";
-      };
-    }
-  );
   # OpenAsar for Discord, patched so H.264 videos play. Discord decodes
   # H.264 with an OpenH264 library it downloads into
   # ~/.config/discord/discord_asset_cache/openh264/, and OpenAsar passes that
@@ -478,11 +450,11 @@ in
     # ~/.config/discord/settings.json, not here). On the NVIDIA 580 driver its
     # GPU process logs EGL_CONTEXT_LOST and Chromium falls back to software
     # rendering; that's harmless noise and does NOT blank the window. (The
-    # blank window of 2026-11 was Vencord; see `vencord` above.)
+    # blank window of 2026-11 was Vencord < 1.15.16; 26.05 now ships it.)
     (pkgs.discord.override {
       withOpenASAR = true;
       withVencord = true;
-      inherit vencord openasar;
+      inherit openasar;
     })
     mangohud
     xclip # Add xclip for clipboard support
