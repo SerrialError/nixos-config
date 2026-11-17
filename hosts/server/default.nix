@@ -71,11 +71,17 @@ in
   ############################################################################
   services.caddy = {
     enable = true;
-    # Only Vaultwarden is served; no static site is hosted on this machine.
+    # Only Vaultwarden and Miniflux are served; no static site is hosted here.
     virtualHosts."vault.jumpsquad.org" = {
       useACMEHost = "vault.jumpsquad.org";
       extraConfig = ''
         reverse_proxy 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
+      '';
+    };
+    virtualHosts."rss.jumpsquad.org" = {
+      useACMEHost = "rss.jumpsquad.org";
+      extraConfig = ''
+        reverse_proxy ${config.services.miniflux.config.LISTEN_ADDR}
       '';
     };
   };
@@ -86,6 +92,11 @@ in
       dnsProvider = "cloudflare";
       environmentFile = config.age.secrets.cloudflare-api-token.path;
       # Check propagation against public DNS, not the local Blocky resolver.
+      dnsResolver = "1.1.1.1:53";
+    };
+    certs."rss.jumpsquad.org" = {
+      dnsProvider = "cloudflare";
+      environmentFile = config.age.secrets.cloudflare-api-token.path;
       dnsResolver = "1.1.1.1:53";
     };
   };
@@ -127,6 +138,45 @@ in
   systemd.services.vaultwarden.restartTriggers = [
     (builtins.hashFile "sha256" ../../secrets/vaultwarden-env.age)
   ];
+
+  ############################################################################
+  # Miniflux: RSS/Atom reader, public at https://rss.jumpsquad.org.
+  #
+  # Unlike the LAN-only media services, this goes through Caddy + Cloudflare
+  # like Vaultwarden, so phone apps get real HTTPS from anywhere (no WireGuard
+  # needed, and no iOS App Transport Security trouble with plain http).
+  # Miniflux has its own login and no open registration (only the admin can
+  # add users).
+  #
+  # Apps sync read state through one of Miniflux's APIs:
+  #   - Miniflux API: Settings > API Keys > create a key; the endpoint is the
+  #     base URL, https://rss.jumpsquad.org.
+  #   - Google Reader / Fever API: Settings > Integrations > enable it and set
+  #     a separate API username/password there (not the login password).
+  #
+  # The module provisions a `miniflux` database in the Postgres instance Immich
+  # already runs, so this adds one small Go process.
+  ############################################################################
+  services.miniflux = {
+    enable = true;
+    # ADMIN_USERNAME / ADMIN_PASSWORD. Only used to create the admin on first
+    # start; once the user exists it is ignored, so changing the password in
+    # the web UI later is fine. Read it with `agenix -d miniflux-admin.age`
+    # from secrets/.
+    adminCredentialsFile = config.age.secrets.miniflux-admin.path;
+    config = {
+      LISTEN_ADDR = "127.0.0.1:8085"; # 8080 is Gatus
+      BASE_URL = "https://rss.jumpsquad.org";
+      HTTPS = 1; # secure cookies + HSTS (TLS is terminated by Caddy)
+      TRUSTED_REVERSE_PROXY_NETWORKS = "127.0.0.1/32,::1/128";
+      POLLING_FREQUENCY = 30; # minutes between feed refresh batches
+    };
+  };
+  age.secrets.miniflux-admin.file = ../../secrets/miniflux-admin.age;
+  systemd.services.miniflux.serviceConfig = {
+    MemoryHigh = "120M"; # 2GB
+    MemoryMax = "160M"; # 2GB
+  };
 
   ############################################################################
   # Music library — received from the desktop over Syncthing, served by

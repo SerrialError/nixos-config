@@ -70,6 +70,12 @@ in
   # app. Desktop-only — the server only ever stores ciphertext, so the shared
   # key never needs to live there.
   "task-sync-secret.age".publicKeys = [ primary ];
+  # Miniflux admin account (ADMIN_USERNAME= / ADMIN_PASSWORD= env file),
+  # decrypted on the server for first-start admin creation.
+  "miniflux-admin.age".publicKeys = [
+    primary
+    server
+  ];
   # Cloudflare Tunnel `desk` credentials (~/.cloudflared/<UUID>.json from
   # `cloudflared tunnel create desk`). Decrypted on the desktop, handed to the
   # cloudflared service via LoadCredential.
