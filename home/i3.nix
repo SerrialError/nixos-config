@@ -62,6 +62,8 @@ in
         "${modifier}+Shift+g" = "exec $HOME/git/nixos-config/scripts/picom-grayscale-toggle.sh";
         "${modifier}+Shift+z" = "[class=\"(?i)zathura\"] scratchpad show, move position center";
         "${modifier}+Shift+m" = "exec alacritty -e ncmpcpp";
+        # Region screenshot (flameshot's capture UI; the daemon is autostarted).
+        "${modifier}+Shift+s" = "exec --no-startup-id flameshot gui";
         # Lock now. loginctl signals logind, which xss-lock catches and runs
         # betterlockscreen (laptop only; a no-op where no locker is registered).
         "${modifier}+Shift+x" = "exec loginctl lock-session";
