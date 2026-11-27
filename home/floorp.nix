@@ -39,6 +39,9 @@
         # Required for userChrome.css to be read at all.
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 
+        # Restore previous windows and tabs on startup.
+        "browser.startup.page" = 3;
+
         # Keep the window open when the last tab is closed.
         "browser.tabs.closeWindowWithLastTab" = false;
 
